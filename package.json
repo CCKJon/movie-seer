@@ -37,5 +37,8 @@
 		"vite": "^4.4.2",
 		"vitest": "^0.32.2"
 	},
-	"type": "module"
+	"type": "module",
+	"dependencies": {
+		"linkedom": "^0.16.1"
+	}
 }
