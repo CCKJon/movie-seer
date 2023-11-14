@@ -1,22 +1,21 @@
-<script context="module" lang="ts">
-  export async function load({ fetch }) {
-    const response = await fetch('/path-to-your-server-endpoint');
-    const { titles } = await response.json();
+<script lang="ts">
+	import { onMount } from 'svelte';
 
-    return {
-      props: { titles },
-    };
-  }
-</script>
+  // export let movieData;
+  export let data;
+  let titles = []
 
-<script>
-  export let titles;
+  onMount(async () => {
+    console.log(data)
+
+
+  });
 </script>
 
 <h1>Upcoming Movies</h1>
 
-<ul>
-  {#each titles as title}
+<!-- <ul>
+  {#each movieData as title}
     <li>{title}</li>
   {/each}
-</ul>
+</ul> -->
