@@ -1,4 +1,5 @@
 <script lang="ts">
+  //@ts-nocheck
 	import { onMount } from 'svelte';
 
   // export let movieData;
@@ -6,16 +7,16 @@
   let titles = []
 
   onMount(async () => {
-    console.log(data)
-
+    console.log(data.data)
 
   });
 </script>
 
 <h1>Upcoming Movies</h1>
 
-<!-- <ul>
-  {#each movieData as title}
-    <li>{title}</li>
+
+<div>
+  {#each data.data as movie}
+    <div>Title: {movie.title} - {movie.streaming_date}</div>
   {/each}
-</ul> -->
+</div>
