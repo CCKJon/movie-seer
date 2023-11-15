@@ -17,8 +17,8 @@
 
 
 <div class="bg-[url($lib/images/theater.jpg)] min-h-screen bg-cover overflow-hidden bg-no-repeat">
-  <h1 class="font-serif text-gray-300 font-bold mx-auto place-items-center text-3xl">Upcoming Movies</h1>
-  <div class="dark">
+  <h1 class="font-serif text-gray-200 font-bold flex flex-row justify-center py-5 text-3xl">Upcoming Movies</h1>
+  <div class="dark flex flex-wrap justify-center">
     {#each data.data as movie}
       <div class="py-1 px-1">
         <Card href="/cards" class="">
