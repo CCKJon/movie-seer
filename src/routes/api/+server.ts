@@ -9,6 +9,7 @@ function parseMovieData(html: string) {
   const { document } = parseHTML(html);
   let titles = [];
   let releasedates = [];
+  let movieposters = [];
 
   document.querySelectorAll('.p--small[data-qa="discovery-media-list-item-title"]').forEach((element) => {
     const title = element.textContent.trim();
@@ -20,9 +21,15 @@ function parseMovieData(html: string) {
     releasedates.push(releasedate);
   });
 
+  document.querySelectorAll('img.posterImage').forEach((element) => {
+    const posterSrc = element.getAttribute('src');
+    movieposters.push(posterSrc);
+  });
+
   let streamablemovies = titles.map((item, index) => ({
   title: item,
   streaming_date: releasedates[index],
+  postersrc: movieposters[index],
 }));
 
   // return titles;
