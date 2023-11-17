@@ -51,7 +51,7 @@ function parseMovieData(html: string) {
 
 
 async function getMovieData() {
-  const URL = "https://www.rottentomatoes.com/browse/movies_at_home/sort:newest"
+  const URL = "https://www.rottentomatoes.com/browse/movies_at_home/sort:newest?page=4"
   const response = await fetch(URL);
 
   if (!response.ok) {
