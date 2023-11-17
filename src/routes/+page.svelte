@@ -5,7 +5,7 @@
   export let data;
 
   let hCard = false;
-  let titles = []
+  let titles = [];
 
 
   onMount(async () => {
@@ -13,9 +13,6 @@
 
   });
 </script>
-
-
-
 
 <div class="bg-[url($lib/images/theater.jpg)] min-h-screen bg-cover overflow-hidden bg-no-repeat">
   <h1 class="font-serif text-gray-200 font-bold flex flex-row justify-center py-5 text-3xl">Upcoming Movies</h1>
