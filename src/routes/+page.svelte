@@ -7,6 +7,7 @@
   let hCard = false;
   let titles = []
 
+
   onMount(async () => {
     console.log(data.data)
 
@@ -31,6 +32,3 @@
     {/each}
   </div>
 </div>
-
-
-<!-- https://www.imdb.com/find/?q={}&ref_=nv_sr_sm -->

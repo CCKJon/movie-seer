@@ -32,18 +32,25 @@ function parseMovieData(html: string) {
   postersrc: movieposters[index],
 }));
 
-  // return titles;
   console.log("streamable movies", streamablemovies)
   const jsonString = JSON.stringify(streamablemovies)
-  // console.log("this is titles", titles)
-  // console.log("this is release dates", releasedates)
+
   return jsonString; 
 }
 
+//   async function getMovieDescription(movietitle) {
+//     const URL = `https://www.google.com/search?q=${movietitle}+movie&client`
+//     const response = await fetch(URL);
+
+//     if (!response.ok) {
+//       throw new Error(`Failed to fetch: ${response.status}`);
+//     }
+//     console.log("this is my response", response)
+//   return await response.text();
+// }
 
 
 async function getMovieData() {
-  // Replace this with your actual URL for fetching movie data
   const URL = "https://www.rottentomatoes.com/browse/movies_at_home/sort:newest"
   const response = await fetch(URL);
 
@@ -54,32 +61,10 @@ async function getMovieData() {
   return await response.text();
 }
 
-
-// export const GET = async () => {
-//   try {
-//     const html = await getMovieData();
-//     let movieData = parseMovieData(html);
-
-//     return {
-//       status: 200,
-//       body: JSON.stringify({ movieData }), // Ensure it's a JSON string
-//       headers: { 'Content-Type': 'application/json' },
-//     };
-//   } catch (error) {
-//     console.error('Error fetching movie data:', error);
-//     return { status: 500, body: 'Internal Server Error' };
-//   }
-// };
-
-
-
 export const GET = async () => {
   const html = await getMovieData();
-  // console.log('I THINK THIS IS MY RESPONSE FROM THE GET REQUEST? ', json(parseMovieData(html)))
   let movieData = parseMovieData(html)
-  
 
-  
   return new Response( movieData, { status: 200 });
 }
 
