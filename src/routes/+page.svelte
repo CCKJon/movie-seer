@@ -34,19 +34,6 @@
     }
   };
 
-
-  //   const response = await fetch("/api", {
-	// 		method: 'POST',
-	// 		headers: {
-	// 			'Content-Type': 'application/json'
-	// 		},
-	// 		body: currentPage.toString()
-	// 	});
-  //   const newData = await response.json();
-  //   data = { data: [...newData] };
-  // };
-
-
   onMount(async () => {
     console.log(data.data)
 
