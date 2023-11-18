@@ -2,22 +2,79 @@
   //@ts-nocheck
 	import { onMount } from 'svelte';
   import { Card, Button, Toggle } from 'flowbite-svelte';
+  import { afterUpdate } from 'svelte';
   export let data;
+  // export let page;
 
   let hCard = false;
   let titles = [];
+  let currentPage = 1;
+  let isLoading= false;
+
+  const loadMoreData = async () => {
+    if (isLoading) return;
+
+      isLoading = true;
+      currentPage++;
+
+    try {
+      const response =await fetch("/api", {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: currentPage.toString()
+		});
+      const newData = await response.json();
+      data.data = [...newData];
+    } catch (error) {
+      console.error('Error loading more data:', error);
+    } finally {
+      isLoading = false;
+    }
+  };
+
+
+  //   const response = await fetch("/api", {
+	// 		method: 'POST',
+	// 		headers: {
+	// 			'Content-Type': 'application/json'
+	// 		},
+	// 		body: currentPage.toString()
+	// 	});
+  //   const newData = await response.json();
+  //   data = { data: [...newData] };
+  // };
 
 
   onMount(async () => {
     console.log(data.data)
 
   });
+
+  afterUpdate(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+
+      if (scrollY + windowHeight >= documentHeight - 200) {
+        loadMoreData();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  });
 </script>
 
 <div class="bg-[url($lib/images/theater.jpg)] min-h-screen bg-cover overflow-hidden bg-no-repeat">
   <h1 class="font-serif text-gray-200 font-bold flex flex-row justify-center py-5 text-4xl">Upcoming Movies</h1>
   <div class="dark flex flex-wrap justify-evenly">
-    {#each data.data as movie}
+    {#each data.data as movie (movie.title)}
         <div class="py-1 px-1 flex justify-center">
           <Card img={movie.postersrc} href={`https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&ref_=nv_sr_sm`} horizontal reverse={hCard} class="mb-4">
             <div class="min-w-[350px] max-w-[350px]">

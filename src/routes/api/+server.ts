@@ -2,14 +2,16 @@
 //@ts-nocheck
 import { json } from '@sveltejs/kit';
 import { parseHTML } from 'linkedom';
-// import type { RouteParams } from '../[user]/[year]/$types.js';
 
+// import type { RouteParams } from '../[user]/[year]/$types.js';
+let number;
 // Modified function to parse movie titles
 function parseMovieData(html: string) {
   const { document } = parseHTML(html);
   let titles = [];
   let releasedates = [];
   let movieposters = [];
+  
 
   document.querySelectorAll('.p--small[data-qa="discovery-media-list-item-title"]').forEach((element) => {
     const title = element.textContent.trim();
@@ -50,8 +52,8 @@ function parseMovieData(html: string) {
 // }
 
 
-async function getMovieData() {
-  const URL = "https://www.rottentomatoes.com/browse/movies_at_home/sort:newest?page=4"
+async function getMovieData(number) {
+  const URL = `https://www.rottentomatoes.com/browse/movies_at_home/sort:newest?page=${number}`
   const response = await fetch(URL);
 
   if (!response.ok) {
@@ -61,8 +63,10 @@ async function getMovieData() {
   return await response.text();
 }
 
-export const GET = async () => {
-  const html = await getMovieData();
+export const POST = async ({ request }) => {
+  const number = await request.json();
+  console.log("this is my number", number)
+  const html = await getMovieData(number);
   let movieData = parseMovieData(html)
 
   return new Response( movieData, { status: 200 });
