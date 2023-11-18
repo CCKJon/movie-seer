@@ -1,7 +1,7 @@
 <script lang="ts">
   //@ts-nocheck
 	import { onMount } from 'svelte';
-  import { Card, Button, Toggle } from 'flowbite-svelte';
+  import { Card, Button, Toggle, Spinner } from 'flowbite-svelte';
   import { afterUpdate } from 'svelte';
   export let data;
   // export let page;
@@ -71,5 +71,10 @@
           </Card>
         </div>
     {/each}
+  </div>
+  <div class="flex flex-row justify-center py-5">
+    {#if isLoading}
+        <Spinner color="yellow" size={12}/>
+    {/if}
   </div>
 </div>
