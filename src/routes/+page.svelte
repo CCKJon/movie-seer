@@ -15,6 +15,7 @@
     if (isLoading) return;
 
       isLoading = true;
+      await new Promise(resolve => setTimeout(resolve, 1500));
       currentPage++;
 
     try {
