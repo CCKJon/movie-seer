@@ -60,7 +60,7 @@
 </script>
 
 <div class="bg-[url($lib/images/theater.jpg)] min-h-screen bg-cover overflow-hidden bg-no-repeat">
-  <h1 class="font-serif text-gray-200 flex flex-row justify-center py-10 text-5xl">Upcoming Movies to Stream</h1>
+  <h1 class="font-serif text-gray-200 flex flex-row justify-center py-10 text-5xl">Upcoming Streamed Movies</h1>
   <div class="dark flex flex-wrap justify-evenly">
     {#each data.data as movie (movie.title)}
         <div class="py-1 px-1 flex justify-center">
