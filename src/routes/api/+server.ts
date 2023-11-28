@@ -46,36 +46,27 @@ function parseTheaterMovieData(html: string) {
   let theatertitles = [];
   let theaterreleasedates = [];
   let theatermovieposters = [];
-  
 
-  document.querySelectorAll('.p--small[data-qa="discovery-media-list-item-title"]').forEach((element) => {
+  document.querySelectorAll('.js-tile-link [data-qa="discovery-media-list-item-title"]').forEach((element) => {
     const title = element.textContent.trim();
-    titles.push(title);
+    theatertitles.push(title);
   });
 
-  document.querySelectorAll('.smaller[data-qa="discovery-media-list-item-start-date"]').forEach((element) => {
+  document.querySelectorAll('.js-tile-link [data-qa="discovery-media-list-item-start-date"]').forEach((element) => {
     const theaterreleasedate = element.textContent.trim();
-    theaterreleasedates.push(releasedate);
+    theaterreleasedates.push(theaterreleasedate);
   });
 
-  document.querySelectorAll('img.posterImage').forEach((element) => {
+  document.querySelectorAll('.js-tile-link .posterImage').forEach((element) => {
     const posterSrc = element.getAttribute('src');
-    movieposters.push(posterSrc);
+    theatermovieposters.push(posterSrc);
   });
-
-  let theatermovies = titles.map((item, index) => ({
-  title: item,
-  theater_date: theaterreleasedates[index],
-  postersrc: theatermovieposters[index],
-}));
 
   console.log("theater movies", theatermovies)
   const jsonString = JSON.stringify(theatermovies)
 
   return jsonString; 
 }
-
-
 
 
 async function getMovieData(number) {
@@ -98,6 +89,26 @@ export const POST = async ({ request }) => {
   return new Response( movieData, { status: 200 });
 }
 
+
+async function getTheaterMovieData(number) {
+  const URL = `https://www.rottentomatoes.com/browse/movies_coming_soon/?page=${number}`
+  const response = await fetch(URL);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch: ${response.status}`);
+  }
+
+  return await response.text();
+}
+
+export const POST = async ({ request }) => {
+  const theaternumber = await request.json();
+  console.log("this is my theater number", theaternumber)
+  const html = await getTheaterMovieData(theaternumber);
+  let theatermovieData = parseTheaterMovieData(html)
+
+  return new Response( theatermovieData, { status: 200 });
+}
 
 
 
