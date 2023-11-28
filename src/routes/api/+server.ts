@@ -40,16 +40,42 @@ function parseMovieData(html: string) {
   return jsonString; 
 }
 
-//   async function getMovieDescription(movietitle) {
-//     const URL = `https://www.google.com/search?q=${movietitle}+movie&client`
-//     const response = await fetch(URL);
 
-//     if (!response.ok) {
-//       throw new Error(`Failed to fetch: ${response.status}`);
-//     }
-//     console.log("this is my response", response)
-//   return await response.text();
-// }
+function parseTheaterMovieData(html: string) {
+  const { document } = parseHTML(html);
+  let theatertitles = [];
+  let theaterreleasedates = [];
+  let theatermovieposters = [];
+  
+
+  document.querySelectorAll('.p--small[data-qa="discovery-media-list-item-title"]').forEach((element) => {
+    const title = element.textContent.trim();
+    titles.push(title);
+  });
+
+  document.querySelectorAll('.smaller[data-qa="discovery-media-list-item-start-date"]').forEach((element) => {
+    const theaterreleasedate = element.textContent.trim();
+    theaterreleasedates.push(releasedate);
+  });
+
+  document.querySelectorAll('img.posterImage').forEach((element) => {
+    const posterSrc = element.getAttribute('src');
+    movieposters.push(posterSrc);
+  });
+
+  let theatermovies = titles.map((item, index) => ({
+  title: item,
+  theater_date: theaterreleasedates[index],
+  postersrc: theatermovieposters[index],
+}));
+
+  console.log("theater movies", theatermovies)
+  const jsonString = JSON.stringify(theatermovies)
+
+  return jsonString; 
+}
+
+
 
 
 async function getMovieData(number) {
