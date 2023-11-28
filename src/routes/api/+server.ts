@@ -62,6 +62,12 @@ function parseTheaterMovieData(html: string) {
     theatermovieposters.push(posterSrc);
   });
 
+  let theatermovies = theatertitles.map((item, index) => ({
+  title: item,
+  theater_date: theaterreleasedates[index],
+  postersrc: theatermovieposters[index],
+}));
+
   console.log("theater movies", theatermovies)
   const jsonString = JSON.stringify(theatermovies)
 
@@ -80,14 +86,14 @@ async function getMovieData(number) {
   return await response.text();
 }
 
-export const POST = async ({ request }) => {
-  const number = await request.json();
-  console.log("this is my number", number)
-  const html = await getMovieData(number);
-  let movieData = parseMovieData(html)
+// export const POST = async ({ request }) => {
+//   const number = await request.json();
+//   console.log("this is my number", number)
+//   const html = await getMovieData(number);
+//   let movieData = parseMovieData(html)
 
-  return new Response( movieData, { status: 200 });
-}
+//   return new Response( movieData, { status: 200 });
+// }
 
 
 async function getTheaterMovieData(number) {
