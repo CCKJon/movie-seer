@@ -1,6 +1,6 @@
 // +page.ts
 export async function load({fetch}) {
-  const movieData = await fetch('/api/theater', {
+  const movieData = await fetch('/api/streaming', {
 			method: 'POST',
 			headers: {
         'Content-Type': 'application/json'
