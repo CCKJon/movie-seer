@@ -1,2 +1,3 @@
-
-<script></script>
+<script>
+  console.log("hellow world!")
+</script>
