@@ -17,7 +17,7 @@
 			class="font-serif text-gray-200 flex flex-row justify-center text-5xl hover:underline {$page
 				.url.pathname === '/streaming'
 				? 'underline'
-				: ''}">Upcoming Streamed Movies</a
+				: ''}">Streamable Movies</a
 		>
 		<a
 			href="/theater"
