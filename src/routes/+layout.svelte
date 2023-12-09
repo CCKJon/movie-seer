@@ -24,7 +24,7 @@
 			class="font-serif text-gray-200 flex flex-row justify-center text-5xl hover:underline {$page
 				.url.pathname === '/theater'
 				? 'underline'
-				: ''}">Upcoming Theatrical Releases</a
+				: ''}">Theatrical Releases</a
 		>
 	</div>
 
