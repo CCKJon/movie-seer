@@ -26,6 +26,7 @@
 				? 'underline'
 				: ''}">Theatrical Releases</a
 		>
+		<div>Blu-Ray Releases</div>
 	</div>
 
 	<div class="px-5"><slot /></div>
