@@ -26,7 +26,7 @@
 				? 'underline'
 				: ''}">Theatrical Releases</a
 		>
-		<div class="font-serif text-gray-200 flex flex-row justify-center text-5xl hover:underline">Blu-Ray Releases</div>
+		<div class="font-serif text-gray-200 flex flex-row justify-center text-5xl">Blu-Ray Releases</div>
 
 	<div class="px-5"><slot /></div>
 </div>
