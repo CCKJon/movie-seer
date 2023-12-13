@@ -26,9 +26,13 @@
 				? 'underline'
 				: ''}">Theatrical Releases</a
 		>
-		<div class="font-serif text-gray-200 flex flex-row justify-center text-5xl">
-			Blu-Ray Releases
-		</div>
+		<a
+			href="/bluray"
+			class="font-serif text-gray-200 flex flex-row justify-center text-5xl hover:underline {$page
+				.url.pathname === '/bluray'
+				? 'underline'
+				: ''}">Bluray Releases</a
+		>
 	</div>
 	<div class="px-5"><slot /></div>
 </div>
