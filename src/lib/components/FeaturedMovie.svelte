@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getHighResPosterUrl, getPlaceholderImage, getImdbUrl } from '$lib/utils/imdb';
+  import { getHighResPosterUrl, getPlaceholderImage, getImdbUrl, getImdbPosterUrl } from '$lib/utils/imdb';
   import { onMount } from 'svelte';
   
   export let movie: {
@@ -11,9 +11,10 @@
   
   let imdbUrl = '';
   let isLoadingImdbUrl = true;
-  $: highResPoster = getHighResPosterUrl(movie.postersrc);
+  let imdbPosterUrl = '';
+  let isLoadingImdbPoster = true;
   $: originalPoster = movie.postersrc;
-  $: currentImageSrc = highResPoster; // Make this reactive
+  $: currentImageSrc = imdbPosterUrl || originalPoster || getPlaceholderImage(); // Prioritize IMDB poster
   
   let imageLoadAttempts = 0;
 
@@ -21,19 +22,29 @@
   $: {
     console.log('FeaturedMovie - Movie data:', movie);
     console.log('FeaturedMovie - Original poster:', originalPoster);
-    console.log('FeaturedMovie - High res poster:', highResPoster);
+    console.log('FeaturedMovie - IMDB poster:', imdbPosterUrl);
     console.log('FeaturedMovie - Current image src:', currentImageSrc);
   }
 
   onMount(async () => {
     try {
-      imdbUrl = await getImdbUrl(movie.title);
+      // Get IMDB URL and poster URL in parallel
+      const [urlResult, posterResult] = await Promise.all([
+        getImdbUrl(movie.title),
+        getImdbPosterUrl(movie.title)
+      ]);
+      
+      imdbUrl = urlResult;
+      imdbPosterUrl = posterResult;
+      
+      console.log('FeaturedMovie - IMDB poster URL fetched:', imdbPosterUrl);
     } catch (error) {
-      console.error('Error getting IMDb URL:', error);
+      console.error('Error getting IMDb data:', error);
       // Fallback to search URL
       imdbUrl = `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`;
     } finally {
       isLoadingImdbUrl = false;
+      isLoadingImdbPoster = false;
     }
   });
 
@@ -42,11 +53,13 @@
     imageLoadAttempts++;
     
     if (imageLoadAttempts === 1 && originalPoster && img.src !== originalPoster) {
-      // First fallback: try original poster
+      // First fallback: try original poster from Rotten Tomatoes
+      console.log('FeaturedMovie - IMDB poster failed, trying original poster');
       currentImageSrc = originalPoster;
       img.src = originalPoster;
     } else {
       // Final fallback: use placeholder
+      console.log('FeaturedMovie - All poster attempts failed, using placeholder');
       currentImageSrc = getPlaceholderImage();
       img.src = getPlaceholderImage();
     }
@@ -57,13 +70,23 @@
   <a href={imdbUrl} target="_blank" rel="noopener noreferrer" class="block group" class:pointer-events-none={isLoadingImdbUrl}>
     <div class="relative overflow-hidden rounded-xl">
       <!-- Background Image -->
-      <img 
-        src={currentImageSrc} 
-        alt={movie.title}
-        class="w-full h-[400px] md:h-[500px] object-cover"
-        loading="lazy"
-        on:error={handleImageError}
-      />
+      {#if isLoadingImdbPoster}
+        <!-- Loading state for IMDB poster -->
+        <div class="w-full h-[400px] md:h-[500px] bg-gray-800 flex items-center justify-center">
+          <div class="text-center">
+            <div class="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+            <p class="text-gray-400 text-sm">Loading high-res poster...</p>
+          </div>
+        </div>
+      {:else}
+        <img 
+          src={currentImageSrc} 
+          alt={movie.title}
+          class="w-full h-[400px] md:h-[500px] object-cover"
+          loading="lazy"
+          on:error={handleImageError}
+        />
+      {/if}
       
       <!-- Gradient Overlay -->
       <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>

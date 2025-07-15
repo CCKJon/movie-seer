@@ -38,7 +38,39 @@ export async function getImdbUrl(movieTitle: string): Promise<string> {
   }
 }
 
-// Function to get high-resolution poster URL
+// Function to get high-resolution poster URL from IMDB via TMDB
+export async function getImdbPosterUrl(movieTitle: string): Promise<string> {
+  try {
+    // Use TMDB API to get movie details and poster
+    const tmdbApiKey = '8c247ea0b4b56ed2ff7d41c9a833aa77'; // Free public API key
+    const searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${tmdbApiKey}&query=${encodeURIComponent(movieTitle)}&language=en-US&page=1&include_adult=false`;
+    
+    const response = await fetch(searchUrl);
+    if (!response.ok) {
+      throw new Error(`TMDB API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.results && data.results.length > 0) {
+      const movie = data.results[0]; // Get the first (most relevant) result
+      
+      if (movie.poster_path) {
+        // TMDB provides high-resolution poster URLs
+        // Use the original size (w500) for high quality
+        return `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
+      }
+    }
+    
+    // Fallback to original poster URL if no TMDB poster found
+    return '';
+  } catch (error) {
+    console.error('Error getting IMDB poster URL:', error);
+    return '';
+  }
+}
+
+// Function to get high-resolution poster URL (legacy function for backward compatibility)
 export function getHighResPosterUrl(posterUrl: string): string {
   console.log('getHighResPosterUrl called with:', posterUrl);
   
