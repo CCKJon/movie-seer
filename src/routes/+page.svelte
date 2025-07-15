@@ -1,3 +1,107 @@
-<script>
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import FeaturedMovie from '$lib/components/FeaturedMovie.svelte';
+  import MovieSection from '$lib/components/MovieSection.svelte';
   
+  let streamingMovies: Array<{
+    title: string;
+    streaming_date?: string;
+    theater_date?: string;
+    postersrc: string;
+  }> = [];
+  
+  let theaterMovies: Array<{
+    title: string;
+    streaming_date?: string;
+    theater_date?: string;
+    postersrc: string;
+  }> = [];
+  
+  let featuredMovie: {
+    title: string;
+    streaming_date?: string;
+    theater_date?: string;
+    postersrc: string;
+  } | null = null;
+
+  onMount(async () => {
+    // Load streaming movies for featured and recent releases
+    try {
+      const streamingResponse = await fetch('/api/streaming', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: "1"
+      });
+      const streamingData = await streamingResponse.json();
+      streamingMovies = streamingData.slice(0, 10); // Get first 10 for recent releases
+      
+      // Use first movie as featured
+      if (streamingData.length > 0) {
+        featuredMovie = streamingData[0];
+      }
+    } catch (error) {
+      console.error('Error loading streaming data:', error);
+    }
+
+    // Load theater movies for continue watching section
+    try {
+      const theaterResponse = await fetch('/api/theater', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: "1"
+      });
+      const theaterData = await theaterResponse.json();
+      theaterMovies = theaterData.slice(0, 8); // Get first 8 for continue watching
+    } catch (error) {
+      console.error('Error loading theater data:', error);
+    }
+  });
 </script>
+
+<svelte:head>
+  <title>Movie Seer - Discover New Movie Releases</title>
+  <meta name="description" content="Stay updated with the latest movie releases - streaming, theatrical, and Blu-ray releases all in one place." />
+</svelte:head>
+
+<div class="min-h-screen bg-gray-900">
+  <!-- Featured Movie Section -->
+  {#if featuredMovie}
+    <FeaturedMovie movie={featuredMovie} />
+  {/if}
+
+  <!-- Recent Streaming Releases -->
+  {#if streamingMovies.length > 0}
+    <MovieSection 
+      title="Recent Streaming Releases" 
+      movies={streamingMovies} 
+      variant="vertical"
+    />
+  {/if}
+
+  <!-- Continue Watching (using theater movies as placeholder) -->
+  {#if theaterMovies.length > 0}
+    <MovieSection 
+      title="Coming to Theaters" 
+      movies={theaterMovies} 
+      variant="horizontal"
+      showProgress={true}
+    />
+  {/if}
+
+  <!-- Empty State -->
+  {#if streamingMovies.length === 0 && theaterMovies.length === 0}
+    <div class="flex items-center justify-center min-h-[400px]">
+      <div class="text-center">
+        <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span class="text-white text-2xl">🎬</span>
+        </div>
+        <h2 class="text-xl font-semibold text-white mb-2">Loading Movies...</h2>
+        <p class="text-gray-400">Please wait while we fetch the latest releases.</p>
+      </div>
+    </div>
+  {/if}
+</div>

@@ -3,8 +3,6 @@
 import { json } from '@sveltejs/kit';
 import { parseHTML } from 'linkedom';
 
-// import type { RouteParams } from '../[user]/[year]/$types.js';
-let number;
 // Modified function to parse movie titles
 function parseMovieData(html: string) {
   const { document } = parseHTML(html);
@@ -29,18 +27,14 @@ function parseMovieData(html: string) {
   });
 
   let streamablemovies = titles.map((item, index) => ({
-  title: item,
-  streaming_date: releasedates[index],
-  postersrc: movieposters[index],
-}));
+    title: item,
+    streaming_date: releasedates[index],
+    postersrc: movieposters[index],
+  }));
 
   console.log("streamable movies", streamablemovies)
-  const jsonString = JSON.stringify(streamablemovies)
-
-  return jsonString; 
+  return streamablemovies;
 }
-
-
 
 async function getMovieData(number) {
   const URL = `https://www.rottentomatoes.com/browse/movies_at_home/sort:newest?page=${number}`
@@ -54,12 +48,17 @@ async function getMovieData(number) {
 }
 
 export const POST = async ({ request }) => {
-  const number = await request.json();
-  console.log("this is my number", number)
-  const html = await getMovieData(number);
-  let movieData = parseMovieData(html)
+  try {
+    const number = await request.json();
+    console.log("this is my number", number)
+    const html = await getMovieData(number);
+    let movieData = parseMovieData(html)
 
-  return new Response( movieData, { status: 200 });
+    return json(movieData);
+  } catch (error) {
+    console.error('Error in streaming API:', error);
+    return json({ error: 'Failed to fetch streaming data' }, { status: 500 });
+  }
 }
 
 

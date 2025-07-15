@@ -1,46 +1,50 @@
 <script lang="ts">
-  //@ts-nocheck
-	import { onMount } from 'svelte';
-  import { Card, Button, Toggle, Spinner } from 'flowbite-svelte';
-  import { afterUpdate } from 'svelte';
+  import { onMount } from 'svelte';
+  import { Spinner } from 'flowbite-svelte';
+  import MovieSection from '$lib/components/MovieSection.svelte';
+  
   export let data;
-  // export let page;
-
-  let hCard = false;
-  let titles = [];
+  
+  let allMovies = [...data.data];
   let currentPage = 1;
-  let isLoading= false;
+  let isLoading = false;
+  let hasMoreData = true;
 
   const loadMoreData = async () => {
-    if (isLoading) return;
+    if (isLoading || !hasMoreData) return;
 
-      isLoading = true;
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      currentPage++;
+    isLoading = true;
+    currentPage++;
 
     try {
-      const response =await fetch("/api/streaming", {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: currentPage.toString()
-		});
+      const response = await fetch("/api/theater", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: currentPage.toString()
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      
       const newData = await response.json();
-      data.data = [...newData];
+      
+      if (newData.length === 0) {
+        hasMoreData = false;
+      } else {
+        allMovies = [...allMovies, ...newData];
+      }
     } catch (error) {
       console.error('Error loading more data:', error);
+      hasMoreData = false;
     } finally {
       isLoading = false;
     }
   };
 
-  onMount(async () => {
-    console.log(data.data)
-
-  });
-
-  afterUpdate(() => {
+  onMount(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
       const windowHeight = window.innerHeight;
@@ -59,20 +63,92 @@
   });
 </script>
 
-<div class="dark flex flex-wrap justify-evenly">
-    {#each data.data as movie (movie.title)}
-        <div class="py-1 px-1 flex justify-center">
-          <Card img={movie.postersrc} href={`https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&ref_=nv_sr_sm`} horizontal reverse={hCard} class="mb-4">
-            <div class="min-w-[350px] max-w-[350px]">
-              <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{movie.title}</h5>
-              <p class="mb-3 font-normal text-gray-700 dark:text-gray-400 leading-tight">{movie.theater_date}</p>
-            </div>
-          </Card>
+<svelte:head>
+  <title>Theatrical Releases - Movie Seer</title>
+  <meta name="description" content="See what's coming to theaters soon" />
+</svelte:head>
+
+<div class="min-h-screen bg-gray-900">
+  <!-- Page Header -->
+  <div class="px-4 py-8">
+    <h1 class="text-4xl font-bold text-white mb-2">Theatrical Releases</h1>
+    <p class="text-gray-400">See what's coming to theaters soon</p>
+  </div>
+
+  <!-- Movies Grid -->
+  {#if allMovies.length > 0}
+    <div class="px-4 pb-8">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        {#each allMovies as movie (movie.title)}
+          <div class="w-full">
+            <a 
+              href={`https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&ref_=nv_sr_sm`} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="block group"
+            >
+              <div class="relative overflow-hidden rounded-lg transition-transform duration-300 group-hover:scale-105">
+                <!-- Movie Poster -->
+                <div class="relative">
+                  <img 
+                    src={movie.postersrc} 
+                    alt={movie.title}
+                    class="w-full aspect-[2/3] object-cover"
+                    loading="lazy"
+                  />
+                  
+                  <!-- Hover Overlay -->
+                  <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300"></div>
+                </div>
+                
+                <!-- Movie Info -->
+                <div class="p-2 bg-gray-900/95 backdrop-blur-sm">
+                  <h3 class="text-white font-semibold text-xs mb-1 line-clamp-2 group-hover:text-blue-300 transition-colors">
+                    {movie.title}
+                  </h3>
+                  {#if movie.theater_date}
+                    <p class="text-gray-400 text-xs">{movie.theater_date}</p>
+                  {/if}
+                </div>
+              </div>
+            </a>
+          </div>
+        {/each}
+      </div>
+    </div>
+  {:else}
+    <!-- Empty State -->
+    <div class="flex items-center justify-center min-h-[400px]">
+      <div class="text-center">
+        <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span class="text-white text-2xl">🎬</span>
         </div>
-    {/each}
-  </div>
-  <div class="flex flex-row justify-center py-5">
-    {#if isLoading}
-        <Spinner color="yellow" size={12}/>
-    {/if}
-  </div>
+        <h2 class="text-xl font-semibold text-white mb-2">No Movies Found</h2>
+        <p class="text-gray-400">Check back later for new theatrical releases.</p>
+      </div>
+    </div>
+  {/if}
+
+  <!-- Loading Spinner -->
+  {#if isLoading}
+    <div class="flex justify-center py-8">
+      <Spinner color="white" size="lg"/>
+    </div>
+  {/if}
+
+  <!-- End of Results -->
+  {#if !hasMoreData && allMovies.length > 0}
+    <div class="text-center py-8">
+      <p class="text-gray-400">You've reached the end of the results.</p>
+    </div>
+  {/if}
+</div>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

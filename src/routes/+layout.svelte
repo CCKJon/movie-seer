@@ -3,36 +3,60 @@
 	import { page } from '$app/stores';
 </script>
 
-<div class="bg-[url($lib/images/theater.jpg)] min-h-screen bg-cover overflow-hidden bg-no-repeat">
-	<div class="flex flex-row justify-evenly items-center py-10">
-		<a
-			href="/"
-			class="font-serif text-gray-200 flex flex-row justify-center text-5xl hover:underline {$page
-				.url.pathname === '/'
-				? 'underline'
-				: ''}">Home</a
-		>
-		<a
-			href="/streaming"
-			class="font-serif text-gray-200 flex flex-row justify-center text-5xl hover:underline {$page
-				.url.pathname === '/streaming'
-				? 'underline'
-				: ''}">Streamable Movies</a
-		>
-		<a
-			href="/theater"
-			class="font-serif text-gray-200 flex flex-row justify-center text-5xl hover:underline {$page
-				.url.pathname === '/theater'
-				? 'underline'
-				: ''}">Theatrical Releases</a
-		>
-		<a
-			href="/bluray"
-			class="font-serif text-gray-200 flex flex-row justify-center text-5xl hover:underline {$page
-				.url.pathname === '/bluray'
-				? 'underline'
-				: ''}">Bluray Releases</a
-		>
-	</div>
-	<div class="px-5"><slot /></div>
+<div class="min-h-screen bg-gray-900">
+	<!-- Navigation Bar -->
+	<nav class="bg-gray-800/50 backdrop-blur-sm border-b border-gray-700">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="flex items-center justify-between h-16">
+				<!-- Logo -->
+				<div class="flex-shrink-0">
+					<a href="/" class="text-2xl font-bold text-white hover:text-blue-300 transition-colors">
+						Movie Seer
+					</a>
+				</div>
+				
+				<!-- Navigation Links -->
+				<div class="hidden md:block">
+					<div class="ml-10 flex items-baseline space-x-8">
+						<a
+							href="/"
+							class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors {$page.url.pathname === '/' ? 'bg-gray-700 text-white' : ''}"
+						>
+							Home
+						</a>
+						<a
+							href="/streaming"
+							class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors {$page.url.pathname === '/streaming' ? 'bg-gray-700 text-white' : ''}"
+						>
+							Streaming
+						</a>
+						<a
+							href="/theater"
+							class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors {$page.url.pathname === '/theater' ? 'bg-gray-700 text-white' : ''}"
+						>
+							Theaters
+						</a>
+						<a
+							href="/bluray"
+							class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors {$page.url.pathname === '/bluray' ? 'bg-gray-700 text-white' : ''}"
+						>
+							Blu-ray
+						</a>
+					</div>
+				</div>
+
+				<!-- Mobile menu button -->
+				<div class="md:hidden">
+					<button class="text-gray-300 hover:text-white p-2">
+						<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+						</svg>
+					</button>
+				</div>
+			</div>
+		</div>
+	</nav>
+	
+	<!-- Main Content -->
+	<main><slot /></main>
 </div>

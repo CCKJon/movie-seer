@@ -1,38 +1,138 @@
-# create-svelte
+# Movie Seer
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+A modern, dark-themed movie discovery platform that aggregates the latest movie releases across streaming platforms, theaters, and Blu-ray. Built with SvelteKit and inspired by modern streaming service designs.
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+### 🎬 **Home Page**
+- **Featured Movie Banner**: Large hero section showcasing the latest streaming release
+- **Recent Streaming Releases**: Horizontal scrollable list of latest streaming movies
+- **Coming to Theaters**: Preview of upcoming theatrical releases
+- **Modern Dark Theme**: Consistent with popular streaming platforms
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+### 📺 **Streaming Page**
+- Grid layout of streaming movies with infinite scroll
+- Real-time data from Rotten Tomatoes
+- Hover effects and smooth animations
+- Direct links to IMDb for more information
 
-# create a new project in my-app
-npm create svelte@latest my-app
+### 🎭 **Theaters Page**
+- Grid layout of upcoming theatrical releases
+- Infinite scroll functionality
+- Real-time data from Rotten Tomatoes
+- Consistent design with streaming page
+
+### 💿 **Blu-ray Page**
+- Coming soon page with feature preview
+- Placeholder for future Blu-ray release data
+- Consistent design language
+
+## Design Features
+
+### 🎨 **UI/UX Design**
+- **Dark Theme**: Consistent gray-900 background with proper contrast
+- **Modern Cards**: Rounded corners, hover effects, and smooth transitions
+- **Responsive Layout**: Works on desktop, tablet, and mobile devices
+- **Horizontal Scrolling**: Smooth scrollable sections for movie lists
+- **Loading States**: Proper loading indicators and empty states
+
+### 🧩 **Components**
+- `MovieCard.svelte`: Reusable movie card component with hover effects
+- `MovieSection.svelte`: Horizontal scrollable movie sections
+- `FeaturedMovie.svelte`: Hero banner component for featured movies
+- Consistent styling across all components
+
+### 🚀 **Performance**
+- Lazy loading for images
+- Infinite scroll for better performance
+- Optimized API responses
+- TypeScript for better development experience
+
+## Technology Stack
+
+- **Frontend**: SvelteKit with TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: Flowbite Svelte
+- **Data Scraping**: LinkedOM for HTML parsing
+- **Data Source**: Rotten Tomatoes
+
+## API Endpoints
+
+- `/api/streaming` - Latest streaming movie releases
+- `/api/theater` - Upcoming theatrical releases  
+- `/api/bluray` - Blu-ray releases (coming soon)
+
+## Getting Started
+
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Run Development Server**
+   ```bash
+   npm run dev
+   ```
+
+3. **Build for Production**
+   ```bash
+   npm run build
+   ```
+
+4. **Type Checking**
+   ```bash
+   npm run check
+   ```
+
+## Project Structure
+
+```
+src/
+├── lib/
+│   ├── components/
+│   │   ├── MovieCard.svelte
+│   │   ├── MovieSection.svelte
+│   │   └── FeaturedMovie.svelte
+│   └── images/
+├── routes/
+│   ├── api/
+│   │   ├── streaming/+server.ts
+│   │   ├── theater/+server.ts
+│   │   └── bluray/+server.ts
+│   ├── streaming/+page.svelte
+│   ├── theater/+page.svelte
+│   ├── bluray/+page.svelte
+│   ├── +layout.svelte
+│   └── +page.svelte
+└── app.html
 ```
 
-## Developing
+## Design Inspiration
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+The UI/UX design is inspired by modern streaming platforms like Netflix, with:
+- Clean, dark interface
+- Large movie posters and banners
+- Horizontal scrolling sections
+- Smooth hover animations
+- Consistent typography and spacing
 
-```bash
-npm run dev
+## Future Enhancements
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+- [ ] User authentication and watchlists
+- [ ] Movie ratings and reviews
+- [ ] Advanced filtering and search
+- [ ] Blu-ray release data integration
+- [ ] Mobile app development
+- [ ] Social features and sharing
 
-## Building
+## Contributing
 
-To create a production version of your app:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests and type checking
+5. Submit a pull request
 
-```bash
-npm run build
-```
+## License
 
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+This project is open source and available under the MIT License.
