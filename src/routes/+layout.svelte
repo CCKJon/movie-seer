@@ -10,7 +10,7 @@
 	}
 </script>
 
-<div class="min-h-screen bg-gray-950">
+<div class="min-h-screen bg-gray-950 w-full">
 	<!-- Navigation Bar -->
 	<nav class="bg-gray-900/50 backdrop-blur-sm border-b border-gray-800">
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -112,5 +112,5 @@
 	</nav>
 	
 	<!-- Main Content -->
-	<main class="min-h-screen"><slot /></main>
+	<main class="min-h-screen w-full"><slot /></main>
 </div>

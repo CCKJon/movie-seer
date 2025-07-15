@@ -74,8 +74,8 @@
   <meta name="description" content="Stay updated with the latest movie releases - streaming, theatrical, and Blu-ray releases all in one place." />
 </svelte:head>
 
-<div class="min-h-screen bg-gray-950">
-  <div class="max-w-7xl mx-auto">
+<div class="min-h-screen bg-gray-950 w-full">
+  <div class="max-w-7xl mx-auto w-full">
     {#if !isLoading}
       <!-- Featured Movie Section -->
       {#if featuredMovie}
