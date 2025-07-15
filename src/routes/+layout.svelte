@@ -1,6 +1,7 @@
 <script>
 	import '../app.postcss';
 	import { page } from '$app/stores';
+	import movieSeerIcon from '$lib/images/movie-seer-icon.png';
 	
 	let mobileMenuOpen = false;
 	
@@ -16,8 +17,9 @@
 			<div class="flex items-center justify-between h-16">
 				<!-- Logo -->
 				<div class="flex-shrink-0">
-					<a href="/" class="text-2xl font-bold text-white hover:text-blue-300 transition-colors">
-						Movie Seer
+					<a href="/" class="flex items-center space-x-3 text-2xl font-bold text-white hover:text-blue-300 transition-colors">
+						<img src={movieSeerIcon} alt="Movie Seer Icon" class="w-12 h-12" />
+						<span>Movie Seer</span>
 					</a>
 				</div>
 				
