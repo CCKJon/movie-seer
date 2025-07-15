@@ -129,13 +129,15 @@ async function getMovieData(number) {
 export const POST = async ({ request }) => {
   try {
     const number = await request.json();
-    console.log("this is my number", number)
+    console.log("Streaming API - Requested page:", number);
     const html = await getMovieData(number);
     
     // Debug: Log a sample of the HTML to understand structure
-    console.log("HTML sample:", html.substring(0, 1000));
+    console.log("Streaming API - HTML sample:", html.substring(0, 1000));
     
-    let movieData = parseMovieData(html)
+    let movieData = parseMovieData(html);
+    console.log("Streaming API - Parsed movies count:", movieData.length);
+    console.log("Streaming API - First few movie titles:", movieData.slice(0, 3).map(m => m.title));
 
     return json(movieData);
   } catch (error) {

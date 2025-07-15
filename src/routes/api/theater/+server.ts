@@ -128,9 +128,12 @@ async function getTheaterMovieData(number) {
 export const POST = async ({ request }) => {
   try {
     const theaternumber = await request.json();
-    console.log("this is my theater number", theaternumber)
+    console.log("Theater API - Requested page:", theaternumber);
     const html = await getTheaterMovieData(theaternumber);
-    let theatermovieData = parseTheaterMovieData(html)
+    let theatermovieData = parseTheaterMovieData(html);
+    
+    console.log("Theater API - Parsed movies count:", theatermovieData.length);
+    console.log("Theater API - First few movie titles:", theatermovieData.slice(0, 3).map(m => m.title));
 
     return json(theatermovieData);
   } catch (error) {

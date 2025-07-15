@@ -12,6 +12,7 @@
   let hasMoreData = true;
   let errorMessage = '';
   let scrollHandler: (() => void) | null = null;
+  let scrollThrottle: ReturnType<typeof setTimeout> | null = null;
 
   const loadMoreData = async () => {
     if (isLoading || !hasMoreData) return;
@@ -24,12 +25,15 @@
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
+      const nextPage = currentPage + 1;
+      console.log(`Requesting page ${nextPage} for streaming movies`);
+
       const response = await fetch("/api/streaming", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: currentPage.toString(),
+        body: nextPage.toString(),
         signal: controller.signal
       });
       
@@ -41,14 +45,35 @@
       
       const newData = await response.json();
       
-      console.log(`Page ${currentPage} returned ${newData.length} movies`);
+      // Check if the response is an error object
+      if (newData.error) {
+        throw new Error(newData.error);
+      }
+      
+      // Ensure newData is an array
+      if (!Array.isArray(newData)) {
+        throw new Error('Invalid data format received from server');
+      }
+      
+      console.log(`Page ${nextPage} returned ${newData.length} movies`);
       
       if (newData.length === 0) {
         console.log('No more data available');
         hasMoreData = false;
       } else {
-        allMovies = [...allMovies, ...newData];
-        currentPage++;
+        // Check for duplicates and only add new movies
+        const existingTitles = new Set(allMovies.map((movie: any) => movie.title));
+        const newMovies = newData.filter((movie: any) => !existingTitles.has(movie.title));
+        
+        console.log(`Found ${newMovies.length} new movies out of ${newData.length} returned`);
+        
+        if (newMovies.length > 0) {
+          allMovies = [...allMovies, ...newMovies];
+          currentPage = nextPage;
+        } else {
+          console.log('All returned movies are duplicates, stopping pagination');
+          hasMoreData = false;
+        }
       }
     } catch (error: any) {
       console.error('Error loading more data:', error);
@@ -65,11 +90,21 @@
 
   onMount(() => {
     scrollHandler = () => {
+      if (scrollThrottle) return; // Prevent multiple rapid calls
+      
+      scrollThrottle = setTimeout(() => {
+        scrollThrottle = null;
+      }, 100);
+
       const scrollY = window.scrollY;
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
 
+      // Debug scroll position
+      console.log(`Scroll: ${scrollY}, Window: ${windowHeight}, Document: ${documentHeight}, Threshold: ${documentHeight - 200}`);
+
       if (scrollY + windowHeight >= documentHeight - 200) {
+        console.log('Scroll threshold reached, loading more data...');
         loadMoreData();
       }
     };
@@ -81,6 +116,10 @@
     if (scrollHandler) {
       window.removeEventListener('scroll', scrollHandler);
       scrollHandler = null;
+    }
+    if (scrollThrottle) {
+      clearTimeout(scrollThrottle);
+      scrollThrottle = null;
     }
   });
 
@@ -103,6 +142,7 @@
     <div class="px-4 py-8">
       <h1 class="text-4xl font-bold text-white mb-2">Streaming Movies</h1>
       <p class="text-gray-400">Latest movies available for streaming at home</p>
+      <p class="text-gray-500 text-sm mt-2">Loaded {allMovies.length} movies (Page {currentPage})</p>
     </div>
 
     <!-- Movies Grid -->
