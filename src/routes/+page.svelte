@@ -96,7 +96,7 @@
         <MovieSection 
           title="Coming to Theaters" 
           movies={theaterMovies} 
-          variant="horizontal"
+          variant="vertical"
           showProgress={true}
         />
       {/if}
