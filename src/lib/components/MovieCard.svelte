@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { getHighResPosterUrl, getPlaceholderImage } from '$lib/utils/imdb';
+  
   export let movie: {
     title: string;
     streaming_date?: string;
@@ -10,7 +12,35 @@
   export let progress = 0;
   export let episodeInfo = '';
 
-  $: imdbUrl = `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&ref_=nv_sr_sm`;
+  $: imdbUrl = `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`;
+  $: highResPoster = getHighResPosterUrl(movie.postersrc);
+  $: originalPoster = movie.postersrc;
+  $: currentImageSrc = highResPoster; // Make this reactive
+  
+  let imageLoadAttempts = 0;
+
+  // Debug logging
+  $: {
+    console.log('MovieCard - Movie data:', movie);
+    console.log('MovieCard - Original poster:', originalPoster);
+    console.log('MovieCard - High res poster:', highResPoster);
+    console.log('MovieCard - Current image src:', currentImageSrc);
+  }
+
+  function handleImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    imageLoadAttempts++;
+    
+    if (imageLoadAttempts === 1 && originalPoster && img.src !== originalPoster) {
+      // First fallback: try original poster
+      currentImageSrc = originalPoster;
+      img.src = originalPoster;
+    } else {
+      // Final fallback: use placeholder
+      currentImageSrc = getPlaceholderImage();
+      img.src = getPlaceholderImage();
+    }
+  }
 </script>
 
 <a href={imdbUrl} target="_blank" rel="noopener noreferrer" class="block group">
@@ -18,10 +48,11 @@
     <!-- Movie Poster -->
     <div class="relative">
       <img 
-        src={movie.postersrc} 
+        src={currentImageSrc} 
         alt={movie.title}
         class="w-full h-auto object-cover {variant === 'vertical' ? 'aspect-[2/3]' : 'aspect-[16/9]'}"
         loading="lazy"
+        on:error={handleImageError}
       />
       
       <!-- Progress Bar for Continue Watching -->

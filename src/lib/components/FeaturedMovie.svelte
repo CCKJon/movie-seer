@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { getHighResPosterUrl, getPlaceholderImage } from '$lib/utils/imdb';
+  
   export let movie: {
     title: string;
     streaming_date?: string;
@@ -6,7 +8,35 @@
     postersrc: string;
   };
   
-  $: imdbUrl = `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&ref_=nv_sr_sm`;
+  $: imdbUrl = `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`;
+  $: highResPoster = getHighResPosterUrl(movie.postersrc);
+  $: originalPoster = movie.postersrc;
+  $: currentImageSrc = highResPoster; // Make this reactive
+  
+  let imageLoadAttempts = 0;
+
+  // Debug logging
+  $: {
+    console.log('FeaturedMovie - Movie data:', movie);
+    console.log('FeaturedMovie - Original poster:', originalPoster);
+    console.log('FeaturedMovie - High res poster:', highResPoster);
+    console.log('FeaturedMovie - Current image src:', currentImageSrc);
+  }
+
+  function handleImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    imageLoadAttempts++;
+    
+    if (imageLoadAttempts === 1 && originalPoster && img.src !== originalPoster) {
+      // First fallback: try original poster
+      currentImageSrc = originalPoster;
+      img.src = originalPoster;
+    } else {
+      // Final fallback: use placeholder
+      currentImageSrc = getPlaceholderImage();
+      img.src = getPlaceholderImage();
+    }
+  }
 </script>
 
 <section class="relative mb-8">
@@ -14,10 +44,11 @@
     <div class="relative overflow-hidden rounded-xl">
       <!-- Background Image -->
       <img 
-        src={movie.postersrc} 
+        src={currentImageSrc} 
         alt={movie.title}
         class="w-full h-[400px] md:h-[500px] object-cover"
         loading="lazy"
+        on:error={handleImageError}
       />
       
       <!-- Gradient Overlay -->
@@ -48,9 +79,6 @@
           </p>
         </div>
       </div>
-      
-      <!-- Hover Effect -->
-      <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
     </div>
   </a>
 </section>

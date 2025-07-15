@@ -24,6 +24,8 @@
     postersrc: string;
   } | null = null;
 
+  let isLoading = true;
+
   onMount(async () => {
     // Load streaming movies for featured and recent releases
     try {
@@ -35,11 +37,13 @@
         body: "1"
       });
       const streamingData = await streamingResponse.json();
+      console.log('Home page - Streaming data received:', streamingData);
       streamingMovies = streamingData.slice(0, 10); // Get first 10 for recent releases
       
       // Use first movie as featured
       if (streamingData.length > 0) {
         featuredMovie = streamingData[0];
+        console.log('Home page - Featured movie:', featuredMovie);
       }
     } catch (error) {
       console.error('Error loading streaming data:', error);
@@ -55,10 +59,13 @@
         body: "1"
       });
       const theaterData = await theaterResponse.json();
+      console.log('Home page - Theater data received:', theaterData);
       theaterMovies = theaterData.slice(0, 8); // Get first 8 for continue watching
     } catch (error) {
       console.error('Error loading theater data:', error);
     }
+
+    isLoading = false;
   });
 </script>
 
@@ -67,41 +74,56 @@
   <meta name="description" content="Stay updated with the latest movie releases - streaming, theatrical, and Blu-ray releases all in one place." />
 </svelte:head>
 
-<div class="min-h-screen bg-gray-900">
-  <!-- Featured Movie Section -->
-  {#if featuredMovie}
-    <FeaturedMovie movie={featuredMovie} />
-  {/if}
+<div class="min-h-screen bg-gray-950">
+  <div class="max-w-7xl mx-auto">
+    {#if !isLoading}
+      <!-- Featured Movie Section -->
+      {#if featuredMovie}
+        <FeaturedMovie movie={featuredMovie} />
+      {/if}
 
-  <!-- Recent Streaming Releases -->
-  {#if streamingMovies.length > 0}
-    <MovieSection 
-      title="Recent Streaming Releases" 
-      movies={streamingMovies} 
-      variant="vertical"
-    />
-  {/if}
+      <!-- Recent Streaming Releases -->
+      {#if streamingMovies.length > 0}
+        <MovieSection 
+          title="Recent Streaming Releases" 
+          movies={streamingMovies} 
+          variant="vertical"
+        />
+      {/if}
 
-  <!-- Continue Watching (using theater movies as placeholder) -->
-  {#if theaterMovies.length > 0}
-    <MovieSection 
-      title="Coming to Theaters" 
-      movies={theaterMovies} 
-      variant="horizontal"
-      showProgress={true}
-    />
-  {/if}
+      <!-- Continue Watching (using theater movies as placeholder) -->
+      {#if theaterMovies.length > 0}
+        <MovieSection 
+          title="Coming to Theaters" 
+          movies={theaterMovies} 
+          variant="horizontal"
+          showProgress={true}
+        />
+      {/if}
 
-  <!-- Empty State -->
-  {#if streamingMovies.length === 0 && theaterMovies.length === 0}
-    <div class="flex items-center justify-center min-h-[400px]">
-      <div class="text-center">
-        <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span class="text-white text-2xl">🎬</span>
+      <!-- Empty State -->
+      {#if streamingMovies.length === 0 && theaterMovies.length === 0}
+        <div class="flex items-center justify-center min-h-[400px]">
+          <div class="text-center">
+            <div class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="text-white text-2xl">🎬</span>
+            </div>
+            <h2 class="text-xl font-semibold text-white mb-2">No Movies Found</h2>
+            <p class="text-gray-400">Check back later for new releases.</p>
+          </div>
         </div>
-        <h2 class="text-xl font-semibold text-white mb-2">Loading Movies...</h2>
-        <p class="text-gray-400">Please wait while we fetch the latest releases.</p>
+      {/if}
+    {:else}
+      <!-- Loading State -->
+      <div class="flex items-center justify-center min-h-[400px]">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-white text-2xl">🎬</span>
+          </div>
+          <h2 class="text-xl font-semibold text-white mb-2">Loading Movies...</h2>
+          <p class="text-gray-400">Please wait while we fetch the latest releases.</p>
+        </div>
       </div>
-    </div>
-  {/if}
+    {/if}
+  </div>
 </div>

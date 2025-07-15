@@ -3,65 +3,102 @@
 import { json } from '@sveltejs/kit';
 import { parseHTML } from 'linkedom';
 
-// Modified function to parse movie titles
-function parseMovieData(html: string) {
-  const { document } = parseHTML(html);
-  let titles = [];
-  let releasedates = [];
-  let movieposters = [];
-  
-
-  document.querySelectorAll('.p--small[data-qa="discovery-media-list-item-title"]').forEach((element) => {
-    const title = element.textContent.trim();
-    titles.push(title);
-  });
-
-  document.querySelectorAll('.smaller[data-qa="discovery-media-list-item-start-date"]').forEach((element) => {
-    const releasedate = element.textContent.trim();
-    releasedates.push(releasedate);
-  });
-
-  document.querySelectorAll('.js-tile-link .posterImage').forEach((element) => {
-    const posterSrc = element.getAttribute('src');
-    movieposters.push(posterSrc);
-  });
-
-  let streamablemovies = titles.map((item, index) => ({
-    title: item,
-    streaming_date: releasedates[index],
-    postersrc: movieposters[index],
-  }));
-
-  console.log("streamable movies", streamablemovies)
-  return streamablemovies;
-}
-
 function parseTheaterMovieData(html: string) {
   const { document } = parseHTML(html);
   let theatertitles = [];
   let theaterreleasedates = [];
   let theatermovieposters = [];
 
-  document.querySelectorAll('.js-tile-link [data-qa="discovery-media-list-item-title"]').forEach((element) => {
-    const title = element.textContent.trim();
-    theatertitles.push(title);
-  });
+  // Try multiple selectors for titles
+  const titleSelectors = [
+    '.js-tile-link [data-qa="discovery-media-list-item-title"]',
+    '[data-qa="discovery-media-list-item-title"]',
+    '.discovery-media-list-item-title',
+    '.movie-title'
+  ];
+  
+  // Try multiple selectors for release dates
+  const dateSelectors = [
+    '.js-tile-link [data-qa="discovery-media-list-item-start-date"]',
+    '[data-qa="discovery-media-list-item-start-date"]',
+    '.discovery-media-list-item-start-date',
+    '.release-date'
+  ];
+  
+  // Try multiple selectors for posters
+  const posterSelectors = [
+    '.js-tile-link .posterImage',
+    '.posterImage',
+    '.movie-poster img',
+    'img[src*="poster"]',
+    '.js-tile-link img[src*=".jpg"]',
+    '.js-tile-link img[src*=".jpeg"]',
+    '.js-tile-link img[src*=".png"]',
+    'img[src*=".jpg"]',
+    'img[src*=".jpeg"]',
+    'img[src*=".png"]'
+  ];
 
-  document.querySelectorAll('.js-tile-link [data-qa="discovery-media-list-item-start-date"]').forEach((element) => {
-    const theaterreleasedate = element.textContent.trim();
-    theaterreleasedates.push(theaterreleasedate);
-  });
+  // Find titles
+  for (const selector of titleSelectors) {
+    const elements = document.querySelectorAll(selector);
+    if (elements.length > 0) {
+      elements.forEach((element) => {
+        const title = element.textContent.trim();
+        if (title) theatertitles.push(title);
+      });
+      break;
+    }
+  }
 
-  document.querySelectorAll('.js-tile-link .posterImage').forEach((element) => {
-    const posterSrc = element.getAttribute('src');
-    theatermovieposters.push(posterSrc);
-  });
+  // Find release dates
+  for (const selector of dateSelectors) {
+    const elements = document.querySelectorAll(selector);
+    if (elements.length > 0) {
+      elements.forEach((element) => {
+        const theaterreleasedate = element.textContent.trim();
+        if (theaterreleasedate) theaterreleasedates.push(theaterreleasedate);
+      });
+      break;
+    }
+  }
+
+  // Find posters
+  for (const selector of posterSelectors) {
+    const elements = document.querySelectorAll(selector);
+    if (elements.length > 0) {
+      elements.forEach((element) => {
+        const posterSrc = element.getAttribute('src');
+        if (posterSrc) {
+          // Ensure the URL is complete (has protocol)
+          let fullUrl = posterSrc;
+          if (posterSrc.startsWith('//')) {
+            fullUrl = 'https:' + posterSrc;
+          } else if (posterSrc.startsWith('/')) {
+            fullUrl = 'https://www.rottentomatoes.com' + posterSrc;
+          }
+          
+          console.log('Found theater poster URL:', fullUrl);
+          theatermovieposters.push(fullUrl);
+        }
+      });
+      break;
+    }
+  }
+
+  // Ensure all arrays have the same length
+  const maxLength = Math.max(theatertitles.length, theaterreleasedates.length, theatermovieposters.length);
+  
+  // Pad arrays with empty values if needed
+  while (theatertitles.length < maxLength) theatertitles.push('');
+  while (theaterreleasedates.length < maxLength) theaterreleasedates.push('');
+  while (theatermovieposters.length < maxLength) theatermovieposters.push('');
 
   let theatermovies = theatertitles.map((item, index) => ({
     title: item,
-    theater_date: theaterreleasedates[index],
-    postersrc: theatermovieposters[index],
-  }));
+    theater_date: theaterreleasedates[index] || '',
+    postersrc: theatermovieposters[index] || '',
+  })).filter(movie => movie.title); // Only include movies with titles
 
   console.log("theater movies", theatermovies)
   return theatermovies;
@@ -69,13 +106,23 @@ function parseTheaterMovieData(html: string) {
 
 async function getTheaterMovieData(number) {
   const URL = `https://www.rottentomatoes.com/browse/movies_coming_soon/?page=${number}`
-  const response = await fetch(URL);
+  
+  try {
+    const response = await fetch(URL, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch: ${response.status}`);
+    }
+
+    return await response.text();
+  } catch (error) {
+    console.error('Error fetching from Rotten Tomatoes:', error);
+    throw error;
   }
-
-  return await response.text();
 }
 
 export const POST = async ({ request }) => {
