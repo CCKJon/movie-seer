@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { getHighResPosterUrl, getPlaceholderImage } from '$lib/utils/imdb';
+  import { getHighResPosterUrl, getPlaceholderImage, getImdbUrl } from '$lib/utils/imdb';
+  import { onMount } from 'svelte';
   
   export let movie: {
     title: string;
@@ -12,7 +13,8 @@
   export let progress = 0;
   export let episodeInfo = '';
 
-  $: imdbUrl = `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`;
+  let imdbUrl = '';
+  let isLoadingImdbUrl = true;
   $: highResPoster = getHighResPosterUrl(movie.postersrc);
   $: originalPoster = movie.postersrc;
   $: currentImageSrc = highResPoster; // Make this reactive
@@ -26,6 +28,18 @@
     console.log('MovieCard - High res poster:', highResPoster);
     console.log('MovieCard - Current image src:', currentImageSrc);
   }
+
+  onMount(async () => {
+    try {
+      imdbUrl = await getImdbUrl(movie.title);
+    } catch (error) {
+      console.error('Error getting IMDb URL:', error);
+      // Fallback to search URL
+      imdbUrl = `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`;
+    } finally {
+      isLoadingImdbUrl = false;
+    }
+  });
 
   function handleImageError(event: Event) {
     const img = event.target as HTMLImageElement;
@@ -43,7 +57,7 @@
   }
 </script>
 
-<a href={imdbUrl} target="_blank" rel="noopener noreferrer" class="block group">
+<a href={imdbUrl} target="_blank" rel="noopener noreferrer" class="block group" class:pointer-events-none={isLoadingImdbUrl}>
   <div class="relative overflow-hidden rounded-lg transition-transform duration-300 group-hover:scale-105">
     <!-- Movie Poster -->
     <div class="relative">

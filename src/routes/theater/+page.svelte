@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { Spinner } from 'flowbite-svelte';
   import MovieSection from '$lib/components/MovieSection.svelte';
-  import { getHighResPosterUrl, getPlaceholderImage } from '$lib/utils/imdb';
+  import { getHighResPosterUrl, getPlaceholderImage, getImdbUrl } from '$lib/utils/imdb';
   
   export let data;
   
@@ -13,6 +13,8 @@
   let errorMessage = '';
   let scrollHandler: (() => void) | null = null;
   let scrollThrottle: ReturnType<typeof setTimeout> | null = null;
+  let movieImdbUrls = new Map<string, string>();
+  let isImdbUrlsLoaded = false;
 
   const loadMoreData = async () => {
     if (isLoading || !hasMoreData) return;
@@ -70,6 +72,19 @@
         if (newMovies.length > 0) {
           allMovies = [...allMovies, ...newMovies];
           currentPage = nextPage;
+          // Update IMDb URLs for newly added movies
+          for (const movie of newMovies) {
+            if (!movieImdbUrls.has(movie.title)) {
+              try {
+                const imdbUrl = await getImdbUrl(movie.title);
+                movieImdbUrls.set(movie.title, imdbUrl);
+              } catch (error) {
+                console.error('Error getting IMDb URL for', movie.title, error);
+                // Fallback to search URL
+                movieImdbUrls.set(movie.title, `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`);
+              }
+            }
+          }
         } else {
           console.log('All returned movies are duplicates, stopping pagination');
           hasMoreData = false;
@@ -88,7 +103,11 @@
     }
   };
 
-  onMount(() => {
+  onMount(async () => {
+    // Pre-load IMDb URLs for all movies
+    await loadImdbUrls();
+    isImdbUrlsLoaded = true;
+    
     scrollHandler = () => {
       if (scrollThrottle) return; // Prevent multiple rapid calls
       
@@ -111,6 +130,21 @@
 
     window.addEventListener('scroll', scrollHandler);
   });
+
+  async function loadImdbUrls() {
+    for (const movie of allMovies) {
+      if (!movieImdbUrls.has(movie.title)) {
+        try {
+          const imdbUrl = await getImdbUrl(movie.title);
+          movieImdbUrls.set(movie.title, imdbUrl);
+        } catch (error) {
+          console.error('Error getting IMDb URL for', movie.title, error);
+          // Fallback to search URL
+          movieImdbUrls.set(movie.title, `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`);
+        }
+      }
+    }
+  }
 
   onDestroy(() => {
     if (scrollHandler) {
@@ -146,13 +180,13 @@
     </div>
 
     <!-- Movies Grid -->
-    {#if allMovies.length > 0}
+    {#if allMovies.length > 0 && isImdbUrlsLoaded}
       <div class="px-4 pb-8">
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {#each allMovies as movie (movie.title)}
             <div class="w-full">
               <a 
-                href={`https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`} 
+                href={movieImdbUrls.get(movie.title) || `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 class="block group"
@@ -185,6 +219,14 @@
               </a>
             </div>
           {/each}
+        </div>
+      </div>
+    {:else if allMovies.length > 0 && !isImdbUrlsLoaded}
+      <!-- Loading IMDb URLs -->
+      <div class="flex justify-center py-8">
+        <div class="flex items-center gap-3">
+          <Spinner color="white" size="xs"/>
+          <span class="text-gray-400 text-sm">Loading movie links...</span>
         </div>
       </div>
     {:else}
