@@ -6,15 +6,33 @@
   
   export let data;
   
-  let allMovies = [...data.data];
   let currentPage = 1;
   let isLoading = false;
   let hasMoreData = true;
   let errorMessage = '';
+  let apiError = '';
+  
+  // Handle potential error responses or empty data
+  let allMovies: Array<{
+    title: string;
+    bluray_date?: string;
+    postersrc: string;
+  }> = [];
+  if (data && data.data && Array.isArray(data.data)) {
+    allMovies = [...data.data];
+  } else if (data && Array.isArray(data)) {
+    allMovies = [...data];
+  } else if (data && data.data && data.data.error) {
+    console.error('API returned error:', data.data.error);
+    apiError = data.data.error;
+  }
   let scrollHandler: (() => void) | null = null;
   let scrollThrottle: ReturnType<typeof setTimeout> | null = null;
   let movieImdbUrls = new Map<string, string>();
   let isImdbUrlsLoaded = false;
+
+
+
 
   const loadMoreData = async () => {
     if (isLoading || !hasMoreData) return;
@@ -104,9 +122,10 @@
   };
 
   onMount(async () => {
-    // Pre-load IMDb URLs for all movies
-    await loadImdbUrls();
-    isImdbUrlsLoaded = true;
+    // Load IMDb URLs in the background (don't wait for them)
+    loadImdbUrls().then(() => {
+      isImdbUrlsLoaded = true;
+    });
     
     scrollHandler = () => {
       if (scrollThrottle) return; // Prevent multiple rapid calls
@@ -177,10 +196,12 @@
       <h1 class="text-4xl font-bold text-white mb-2">Blu-ray Releases</h1>
       <p class="text-gray-400">Discover the latest Blu-ray and 4K Ultra HD releases</p>
       <p class="text-gray-500 text-sm mt-2">Loaded {allMovies.length} movies (Page {currentPage})</p>
+      
+
     </div>
 
     <!-- Movies Grid -->
-    {#if allMovies.length > 0 && isImdbUrlsLoaded}
+    {#if allMovies.length > 0}
       <div class="px-4 pb-8">
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {#each allMovies as movie (movie.title)}
@@ -219,14 +240,6 @@
               </a>
             </div>
           {/each}
-        </div>
-      </div>
-    {:else if allMovies.length > 0 && !isImdbUrlsLoaded}
-      <!-- Loading IMDb URLs -->
-      <div class="flex justify-center py-8">
-        <div class="flex items-center gap-3">
-          <Spinner color="white" size="xs"/>
-          <span class="text-gray-400 text-sm">Loading movie links...</span>
         </div>
       </div>
     {:else}

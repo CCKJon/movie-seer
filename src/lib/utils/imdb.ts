@@ -72,16 +72,12 @@ export async function getImdbPosterUrl(movieTitle: string): Promise<string> {
 
 // Function to get high-resolution poster URL (legacy function for backward compatibility)
 export function getHighResPosterUrl(posterUrl: string): string {
-  console.log('getHighResPosterUrl called with:', posterUrl);
-  
   if (!posterUrl) {
-    console.log('No poster URL provided, returning placeholder');
     return getPlaceholderImage();
   }
   
   // For now, return the original URL to ensure images load
   // We can enhance this later once we understand the URL patterns better
-  console.log('Returning original URL:', posterUrl);
   return posterUrl;
   
   // TODO: Implement proper high-resolution URL detection
