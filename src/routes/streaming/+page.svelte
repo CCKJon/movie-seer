@@ -15,6 +15,22 @@
   let scrollThrottle: ReturnType<typeof setTimeout> | null = null;
   let movieImdbUrls = new Map<string, string>();
   let isImdbUrlsLoaded = false;
+  
+  // Search functionality
+  let searchQuery = '';
+  let filteredMovies = [...allMovies];
+
+  // Filter movies based on search query
+  $: {
+    if (searchQuery.trim() === '') {
+      filteredMovies = [...allMovies];
+    } else {
+      const query = searchQuery.toLowerCase().trim();
+      filteredMovies = allMovies.filter(movie => 
+        movie.title.toLowerCase().includes(query)
+      );
+    }
+  }
 
   const loadMoreData = async () => {
     if (isLoading || !hasMoreData) return;
@@ -174,16 +190,42 @@
   <div class="max-w-7xl mx-auto">
     <!-- Page Header -->
     <div class="px-4 py-8">
-      <h1 class="text-4xl font-bold text-white mb-2">Streaming Movies</h1>
-      <p class="text-gray-400">Latest movies available for streaming at home</p>
-      <p class="text-gray-500 text-sm mt-2">Loaded {allMovies.length} movies (Page {currentPage})</p>
+      <div class="flex justify-between items-start">
+        <div>
+          <h1 class="text-4xl font-bold text-white mb-2">Streaming Movies</h1>
+          <p class="text-gray-400">Latest movies available for streaming at home</p>
+          <p class="text-gray-500 text-sm mt-2">Loaded {allMovies.length} movies (Page {currentPage})</p>
+        </div>
+        
+        <!-- Search Bar -->
+        <div class="max-w-lg mt-4">
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+            <input
+              type="text"
+              bind:value={searchQuery}
+              placeholder="Search movies..."
+              class="block w-full pl-10 pr-3 py-2 border border-gray-600 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          {#if searchQuery.trim() !== ''}
+            <p class="text-gray-400 text-sm mt-2">
+              Showing {filteredMovies.length} of {allMovies.length} movies
+            </p>
+          {/if}
+        </div>
+      </div>
     </div>
 
     <!-- Movies Grid -->
-    {#if allMovies.length > 0 && isImdbUrlsLoaded}
+    {#if filteredMovies.length > 0 && isImdbUrlsLoaded}
       <div class="px-4 pb-8">
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {#each allMovies as movie (movie.title)}
+          {#each filteredMovies as movie (movie.title)}
             <div class="w-full">
               <a 
                 href={movieImdbUrls.get(movie.title) || `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`} 
@@ -227,6 +269,23 @@
         <div class="flex items-center gap-3">
           <Spinner color="white" size="xs"/>
           <span class="text-gray-400 text-sm">Loading movie links...</span>
+        </div>
+      </div>
+    {:else if searchQuery.trim() !== '' && filteredMovies.length === 0}
+      <!-- No Search Results -->
+      <div class="flex items-center justify-center min-h-[400px]">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-white text-2xl">🔍</span>
+          </div>
+          <h2 class="text-xl font-semibold text-white mb-2">No Movies Found</h2>
+          <p class="text-gray-400">No movies match your search for "{searchQuery}".</p>
+          <button 
+            on:click={() => searchQuery = ''}
+            class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Clear Search
+          </button>
         </div>
       </div>
     {:else}
