@@ -12,9 +12,18 @@ export async function getImdbUrl(movieTitle: string): Promise<string> {
       .replace(/\([^)]*\)/g, '') // Remove parentheses and their contents
       .replace(/\[[^\]]*\]/g, '') // Remove brackets and their contents
       .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .replace(/\b(4K|Blu-ray|Ultra HD|UHD|HD|DVD)\b/gi, '') // Remove format indicators
+      .replace(/\b(Collector's Edition|Special Edition|Limited Edition|Director's Cut|Extended Cut)\b/gi, '') // Remove edition indicators
+      .replace(/\b(Digital|Streaming|VOD|Video on Demand)\b/gi, '') // Remove digital indicators
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space again
       .trim();
     
     console.log(`Searching for IMDb URL: "${movieTitle}" -> "${cleanTitle}"`);
+    
+    // If the title was significantly cleaned, log it
+    if (cleanTitle !== movieTitle && cleanTitle.length < movieTitle.length) {
+      console.log(`Title cleaned from "${movieTitle}" to "${cleanTitle}"`);
+    }
     
     const searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${tmdbApiKey}&query=${encodeURIComponent(cleanTitle)}&language=en-US&page=1&include_adult=false`;
     
@@ -30,6 +39,11 @@ export async function getImdbUrl(movieTitle: string): Promise<string> {
     }
     
     const data = await response.json();
+    
+    console.log(`TMDB search for "${cleanTitle}" returned ${data.results?.length || 0} results`);
+    if (data.results && data.results.length > 0) {
+      console.log(`Top 3 TMDB results:`, data.results.slice(0, 3).map((r: any) => r.title));
+    }
     
     if (data.results && data.results.length > 0) {
       // Try to find the best match by comparing titles
