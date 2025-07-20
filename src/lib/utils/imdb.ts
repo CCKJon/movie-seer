@@ -12,10 +12,13 @@ export async function getImdbUrl(movieTitle: string): Promise<string> {
       .replace(/\([^)]*\)/g, '') // Remove parentheses and their contents
       .replace(/\[[^\]]*\]/g, '') // Remove brackets and their contents
       .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-      .replace(/\b(4K|Blu-ray|Ultra HD|UHD|HD|DVD)\b/gi, '') // Remove format indicators
-      .replace(/\b(Collector's Edition|Special Edition|Limited Edition|Director's Cut|Extended Cut)\b/gi, '') // Remove edition indicators
-      .replace(/\b(Digital|Streaming|VOD|Video on Demand)\b/gi, '') // Remove digital indicators
+      .replace(/\b(4K|Blu-ray|Ultra HD|UHD|HD|DVD|3D)\b/gi, '') // Remove format indicators
+      .replace(/\b(Collector's Edition|Special Edition|Limited Edition|Director's Cut|Extended Cut|Unrated|Rated)\b/gi, '') // Remove edition indicators
+      .replace(/\b(Digital|Streaming|VOD|Video on Demand|On Demand)\b/gi, '') // Remove digital indicators
+      .replace(/\b(Release|Releases|Coming Soon|Now Available|Available Now)\b/gi, '') // Remove availability indicators
       .replace(/\s+/g, ' ') // Replace multiple spaces with single space again
+      .replace(/^\s*[-–—]\s*/, '') // Remove leading dashes
+      .replace(/\s*[-–—]\s*$/, '') // Remove trailing dashes
       .trim();
     
     console.log(`Searching for IMDb URL: "${movieTitle}" -> "${cleanTitle}"`);
@@ -26,6 +29,9 @@ export async function getImdbUrl(movieTitle: string): Promise<string> {
     }
     
     const searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${tmdbApiKey}&query=${encodeURIComponent(cleanTitle)}&language=en-US&page=1&include_adult=false`;
+    
+    // Log the actual search URL being used
+    console.log(`TMDB search URL: ${searchUrl}`);
     
     const response = await fetch(searchUrl, {
       headers: {
