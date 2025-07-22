@@ -1,3 +1,19 @@
+// Helper function to clean movie titles by removing format indicators and other metadata
+export function cleanMovieTitle(movieTitle: string): string {
+  return movieTitle
+    .replace(/\([^)]*\)/g, '') // Remove parentheses and their contents
+    .replace(/\[[^\]]*\]/g, '') // Remove brackets and their contents
+    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+    .replace(/\b(4K|Blu-ray|Ultra HD|UHD|HD|DVD|3D)\b/gi, '') // Remove format indicators
+    .replace(/\b(Collector's Edition|Special Edition|Limited Edition|Director's Cut|Extended Cut|Unrated|Rated)\b/gi, '') // Remove edition indicators
+    .replace(/\b(Digital|Streaming|VOD|Video on Demand|On Demand)\b/gi, '') // Remove digital indicators
+    .replace(/\b(Release|Releases|Coming Soon|Now Available|Available Now)\b/gi, '') // Remove availability indicators
+    .replace(/\s+/g, ' ') // Replace multiple spaces with single space again
+    .replace(/^\s*[-–—]\s*/, '') // Remove leading dashes
+    .replace(/\s*[-–—]\s*$/, '') // Remove trailing dashes
+    .trim();
+}
+
 // Utility function to get IMDB movie URL
 export async function getImdbUrl(movieTitle: string): Promise<string> {
   try {
@@ -8,18 +24,7 @@ export async function getImdbUrl(movieTitle: string): Promise<string> {
     const tmdbApiKey = '8c247ea0b4b56ed2ff7d41c9a833aa77'; // Free public API key
     
     // Clean the movie title for better matching
-    const cleanTitle = movieTitle
-      .replace(/\([^)]*\)/g, '') // Remove parentheses and their contents
-      .replace(/\[[^\]]*\]/g, '') // Remove brackets and their contents
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-      .replace(/\b(4K|Blu-ray|Ultra HD|UHD|HD|DVD|3D)\b/gi, '') // Remove format indicators
-      .replace(/\b(Collector's Edition|Special Edition|Limited Edition|Director's Cut|Extended Cut|Unrated|Rated)\b/gi, '') // Remove edition indicators
-      .replace(/\b(Digital|Streaming|VOD|Video on Demand|On Demand)\b/gi, '') // Remove digital indicators
-      .replace(/\b(Release|Releases|Coming Soon|Now Available|Available Now)\b/gi, '') // Remove availability indicators
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space again
-      .replace(/^\s*[-–—]\s*/, '') // Remove leading dashes
-      .replace(/\s*[-–—]\s*$/, '') // Remove trailing dashes
-      .trim();
+    const cleanTitle = cleanMovieTitle(movieTitle);
     
     console.log(`Searching for IMDb URL: "${movieTitle}" -> "${cleanTitle}"`);
     
@@ -146,11 +151,12 @@ export async function getImdbUrl(movieTitle: string): Promise<string> {
     
     // Fallback to search URL if no IMDb ID found
     console.log(`No IMDb ID found for "${movieTitle}", using search URL`);
-    return `https://www.imdb.com/find/?q=${encodeURIComponent(movieTitle)}&s=tt&ttype=ft&ref_=fn_ft`;
+    return `https://www.imdb.com/find/?q=${encodeURIComponent(cleanTitle)}&s=tt&ttype=ft&ref_=fn_ft`;
   } catch (error) {
     console.error('Error getting IMDB URL for:', movieTitle, error);
-    // Fallback to search URL
-    return `https://www.imdb.com/find/?q=${encodeURIComponent(movieTitle)}&s=tt&ttype=ft&ref_=fn_ft`;
+    // Fallback to search URL using cleaned title
+    const fallbackCleanTitle = cleanMovieTitle(movieTitle);
+    return `https://www.imdb.com/find/?q=${encodeURIComponent(fallbackCleanTitle)}&s=tt&ttype=ft&ref_=fn_ft`;
   }
 }
 
