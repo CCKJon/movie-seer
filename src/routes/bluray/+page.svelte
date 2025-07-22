@@ -142,15 +142,9 @@
   };
 
   onMount(async () => {
-    // Set isImdbUrlsLoaded to true immediately so movies can be displayed
+    // Pre-load IMDb URLs for all movies
+    await loadImdbUrls();
     isImdbUrlsLoaded = true;
-    
-    // Load IMDb URLs in the background (non-blocking)
-    loadImdbUrls().then(() => {
-      // IMDb URLs loaded successfully
-    }).catch(error => {
-      // IMDb URLs failed to load, but movies are still displayed
-    });
     
     scrollHandler = () => {
       if (scrollThrottle) return; // Prevent multiple rapid calls
@@ -172,12 +166,13 @@
   });
 
   async function loadImdbUrls() {
-    for (const movie of displayedMovies) {
+    for (const movie of allMovies) {
       if (!movieImdbUrls.has(movie.title)) {
         try {
           const imdbUrl = await getImdbUrl(movie.title);
           movieImdbUrls.set(movie.title, imdbUrl);
         } catch (error) {
+          console.error('Error getting IMDb URL for', movie.title, error);
           // Fallback to search URL
           movieImdbUrls.set(movie.title, `https://www.imdb.com/find/?q=${encodeURIComponent(cleanMovieTitle(movie.title))}&s=tt&ttype=ft&ref_=fn_ft`);
         }
@@ -244,7 +239,7 @@
     </div>
 
     <!-- Movies Grid -->
-    {#if filteredMovies.length > 0}
+    {#if filteredMovies.length > 0 && isImdbUrlsLoaded}
       <div class="px-4 pb-8">
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {#each filteredMovies as movie, index (movie.title + '-' + index)}
@@ -286,6 +281,17 @@
         </div>
       </div>
       
+    {:else if allMovies.length > 0 && !isImdbUrlsLoaded}
+      <!-- Loading IMDb URLs -->
+      <div class="flex items-center justify-center min-h-[400px]">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Spinner color="white" size="lg"/>
+          </div>
+          <h2 class="text-xl font-semibold text-white mb-2">Loading Movie Links</h2>
+          <p class="text-gray-400">Preparing direct links to IMDb...</p>
+        </div>
+      </div>
     {:else if searchQuery.trim() !== '' && filteredMovies.length === 0}
       <!-- No Search Results -->
       <div class="flex items-center justify-center min-h-[400px]">

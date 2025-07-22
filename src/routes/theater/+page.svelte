@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { Spinner } from 'flowbite-svelte';
   import MovieSection from '$lib/components/MovieSection.svelte';
-  import { getHighResPosterUrl, getPlaceholderImage, getImdbUrl } from '$lib/utils/imdb';
+  import { getHighResPosterUrl, getPlaceholderImage, getImdbUrl, cleanMovieTitle } from '$lib/utils/imdb';
   
   export let data;
   
@@ -94,11 +94,11 @@
               try {
                 const imdbUrl = await getImdbUrl(movie.title);
                 movieImdbUrls.set(movie.title, imdbUrl);
-              } catch (error) {
-                console.error('Error getting IMDb URL for', movie.title, error);
-                // Fallback to search URL
-                movieImdbUrls.set(movie.title, `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`);
-              }
+                      } catch (error) {
+          console.error('Error getting IMDb URL for', movie.title, error);
+          // Fallback to search URL
+          movieImdbUrls.set(movie.title, `https://www.imdb.com/find/?q=${encodeURIComponent(cleanMovieTitle(movie.title))}&s=tt&ttype=ft&ref_=fn_ft`);
+        }
             }
           }
         } else {
@@ -153,11 +153,11 @@
         try {
           const imdbUrl = await getImdbUrl(movie.title);
           movieImdbUrls.set(movie.title, imdbUrl);
-        } catch (error) {
-          console.error('Error getting IMDb URL for', movie.title, error);
-          // Fallback to search URL
-          movieImdbUrls.set(movie.title, `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`);
-        }
+                      } catch (error) {
+                console.error('Error getting IMDb URL for', movie.title, error);
+                // Fallback to search URL
+                movieImdbUrls.set(movie.title, `https://www.imdb.com/find/?q=${encodeURIComponent(cleanMovieTitle(movie.title))}&s=tt&ttype=ft&ref_=fn_ft`);
+              }
       }
     }
   }
@@ -228,7 +228,7 @@
           {#each filteredMovies as movie (movie.title)}
             <div class="w-full">
               <a 
-                href={movieImdbUrls.get(movie.title) || `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`} 
+                href={movieImdbUrls.get(movie.title) || `https://www.imdb.com/find/?q=${encodeURIComponent(cleanMovieTitle(movie.title))}&s=tt&ttype=ft&ref_=fn_ft`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 class="block group"
