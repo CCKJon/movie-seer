@@ -6,7 +6,22 @@
   
   export let data;
   
-  let allMovies = [...data.data];
+  // Limit initial display to 25 movies
+  const INITIAL_DISPLAY_COUNT = 25;
+  let allMovies = data?.data ? [...data.data] : [];
+  
+  // Remove duplicates based on title
+  const uniqueMovies = [];
+  const seenTitles = new Set();
+  for (const movie of allMovies) {
+    if (!seenTitles.has(movie.title)) {
+      seenTitles.add(movie.title);
+      uniqueMovies.push(movie);
+    }
+  }
+  allMovies = uniqueMovies;
+  
+  let displayedMovies = allMovies.slice(0, INITIAL_DISPLAY_COUNT);
   let currentPage = 1;
   let isLoading = false;
   let hasMoreData = true;
@@ -18,20 +33,19 @@
   
   // Search functionality
   let searchQuery = '';
-  let filteredMovies = [...allMovies];
+  let filteredMovies = [...displayedMovies];
 
   // Filter movies based on search query
   $: {
     if (searchQuery.trim() === '') {
-      filteredMovies = [...allMovies];
+      filteredMovies = [...displayedMovies];
     } else {
       const query = searchQuery.toLowerCase().trim();
-      filteredMovies = allMovies.filter(movie => 
+      filteredMovies = displayedMovies.filter(movie => 
         movie.title.toLowerCase().includes(query)
       );
     }
   }
-
 
   const loadMoreData = async () => {
     if (isLoading || !hasMoreData) return;
@@ -45,7 +59,6 @@
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
       const nextPage = currentPage + 1;
-      console.log(`Requesting page ${nextPage} for bluray movies`);
 
       const response = await fetch("/api/bluray", {
         method: 'POST',
@@ -74,41 +87,33 @@
         throw new Error('Invalid data format received from server');
       }
       
-      console.log(`Page ${nextPage} returned ${newData.length} movies`);
-      
       if (newData.length === 0) {
-        console.log('No more data available');
         hasMoreData = false;
       } else {
         // Check for duplicates and only add new movies
         const existingTitles = new Set(allMovies.map((movie: any) => movie.title));
         const newMovies = newData.filter((movie: any) => !existingTitles.has(movie.title));
         
-        console.log(`Found ${newMovies.length} new movies out of ${newData.length} returned`);
-        
         if (newMovies.length > 0) {
           allMovies = [...allMovies, ...newMovies];
           currentPage = nextPage;
-          // Update IMDb URLs for newly added movies
+          
+          // Update IMDb URLs for newly added movies in background
           for (const movie of newMovies) {
             if (!movieImdbUrls.has(movie.title)) {
-              try {
-                const imdbUrl = await getImdbUrl(movie.title);
+              getImdbUrl(movie.title).then(imdbUrl => {
                 movieImdbUrls.set(movie.title, imdbUrl);
-              } catch (error) {
-                console.error('Error getting IMDb URL for', movie.title, error);
+              }).catch(error => {
                 // Fallback to search URL
                 movieImdbUrls.set(movie.title, `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`);
-              }
+              });
             }
           }
         } else {
-          console.log('All returned movies are duplicates, stopping pagination');
           hasMoreData = false;
         }
       }
     } catch (error: any) {
-      console.error('Error loading more data:', error);
       if (error.name === 'AbortError') {
         errorMessage = 'Request timed out. Please try again.';
       } else {
@@ -120,10 +125,32 @@
     }
   };
 
+  // Function to load more displayed movies from existing data
+  const loadMoreDisplayedMovies = () => {
+    if (displayedMovies.length < allMovies.length) {
+      const startIndex = displayedMovies.length;
+      const endIndex = Math.min(startIndex + INITIAL_DISPLAY_COUNT, allMovies.length);
+      displayedMovies = allMovies.slice(0, endIndex);
+      
+      // If we've shown all available movies and there might be more pages, try to load more
+      if (displayedMovies.length >= allMovies.length && hasMoreData) {
+        loadMoreData();
+      }
+    } else if (hasMoreData) {
+      loadMoreData();
+    }
+  };
+
   onMount(async () => {
-    // Pre-load IMDb URLs for all movies
-    await loadImdbUrls();
+    // Set isImdbUrlsLoaded to true immediately so movies can be displayed
     isImdbUrlsLoaded = true;
+    
+    // Load IMDb URLs in the background (non-blocking)
+    loadImdbUrls().then(() => {
+      // IMDb URLs loaded successfully
+    }).catch(error => {
+      // IMDb URLs failed to load, but movies are still displayed
+    });
     
     scrollHandler = () => {
       if (scrollThrottle) return; // Prevent multiple rapid calls
@@ -136,12 +163,8 @@
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
 
-      // Debug scroll position
-      console.log(`Scroll: ${scrollY}, Window: ${windowHeight}, Document: ${documentHeight}, Threshold: ${documentHeight - 200}`);
-
       if (scrollY + windowHeight >= documentHeight - 200) {
-        console.log('Scroll threshold reached, loading more data...');
-        loadMoreData();
+        loadMoreDisplayedMovies();
       }
     };
 
@@ -149,13 +172,12 @@
   });
 
   async function loadImdbUrls() {
-    for (const movie of allMovies) {
+    for (const movie of displayedMovies) {
       if (!movieImdbUrls.has(movie.title)) {
         try {
           const imdbUrl = await getImdbUrl(movie.title);
           movieImdbUrls.set(movie.title, imdbUrl);
         } catch (error) {
-          console.error('Error getting IMDb URL for', movie.title, error);
           // Fallback to search URL
           movieImdbUrls.set(movie.title, `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`);
         }
@@ -176,7 +198,6 @@
 
   function handleImageError(event: Event) {
     const img = event.target as HTMLImageElement;
-    console.log('Image failed to load:', img.src);
     // Use placeholder as fallback
     img.src = getPlaceholderImage();
   }
@@ -195,7 +216,7 @@
         <div>
           <h1 class="text-4xl font-bold text-white mb-2">Blu-ray Releases</h1>
           <p class="text-gray-400">Discover the latest Blu-ray and 4K Ultra HD releases</p>
-          <p class="text-gray-500 text-sm mt-2">Loaded {allMovies.length} movies (Page {currentPage})</p>
+          <p class="text-gray-500 text-sm mt-2">Showing {displayedMovies.length} of {allMovies.length} movies (Page {currentPage})</p>
         </div>
         
         <!-- Search Bar -->
@@ -215,7 +236,7 @@
           </div>
           {#if searchQuery.trim() !== ''}
             <p class="text-gray-400 text-sm mt-2">
-              Showing {filteredMovies.length} of {allMovies.length} movies
+              Showing {filteredMovies.length} of {displayedMovies.length} movies
             </p>
           {/if}
         </div>
@@ -223,10 +244,10 @@
     </div>
 
     <!-- Movies Grid -->
-    {#if filteredMovies.length > 0 && isImdbUrlsLoaded}
+    {#if filteredMovies.length > 0}
       <div class="px-4 pb-8">
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {#each filteredMovies as movie (movie.title)}
+          {#each filteredMovies as movie, index (movie.title + '-' + index)}
             <div class="w-full">
               <a 
                 href={movieImdbUrls.get(movie.title) || `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`} 
@@ -264,6 +285,42 @@
           {/each}
         </div>
       </div>
+      
+    {:else if searchQuery.trim() !== '' && filteredMovies.length === 0}
+      <!-- No Search Results -->
+      <div class="flex items-center justify-center min-h-[400px]">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-white text-2xl">🔍</span>
+          </div>
+          <h2 class="text-xl font-semibold text-white mb-2">No Movies Found</h2>
+          <p class="text-gray-400">No movies match your search for "{searchQuery}".</p>
+          <button 
+            on:click={() => searchQuery = ''}
+            class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Clear Search
+          </button>
+        </div>
+      </div>
+    {:else if allMovies.length === 0}
+      <!-- No Data Available -->
+      <div class="flex items-center justify-center min-h-[400px]">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-white text-2xl">⚠️</span>
+          </div>
+          <h2 class="text-xl font-semibold text-white mb-2">No Blu-ray Data Available</h2>
+          <p class="text-gray-400 mb-4">Unable to load Blu-ray releases at the moment.</p>
+          <p class="text-gray-500 text-sm mb-4">Debug info: allMovies.length = {allMovies.length}, displayedMovies.length = {displayedMovies.length}</p>
+          <button 
+            on:click={() => window.location.reload()}
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
     {:else}
       <!-- Empty State -->
       <div class="flex items-center justify-center min-h-[400px]">
@@ -289,9 +346,31 @@
 
     <!-- Error Message -->
     {#if errorMessage}
-      <div class="flex justify-center py-4">
-        <div class="text-red-400 text-sm">{errorMessage}</div>
+      <div class="text-center py-8">
+        <p class="text-red-400 mb-4">{errorMessage}</p>
+        <button 
+          on:click={() => { hasMoreData = true; currentPage = 1; loadMoreData(); }}
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    {/if}
+
+    <!-- End of Results -->
+    {#if !hasMoreData && allMovies.length > 0 && !isLoading}
+      <div class="text-center py-8">
+        <p class="text-gray-400">You've reached the end of the results.</p>
       </div>
     {/if}
   </div>
 </div>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>
