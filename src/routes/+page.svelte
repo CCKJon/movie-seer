@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import FeaturedMovie from '$lib/components/FeaturedMovie.svelte';
   import MovieSection from '$lib/components/MovieSection.svelte';
   
@@ -25,6 +25,31 @@
   } | null = null;
 
   let isLoading = true;
+  let currentFeaturedIndex = 0;
+  let rotationInterval: ReturnType<typeof setInterval>;
+
+  // Function to rotate featured movie
+  function rotateFeaturedMovie() {
+    if (streamingMovies.length > 1) {
+      currentFeaturedIndex = (currentFeaturedIndex + 1) % streamingMovies.length;
+      featuredMovie = streamingMovies[currentFeaturedIndex];
+      console.log('Rotating to featured movie:', featuredMovie?.title);
+    }
+  }
+
+  // Start rotation timer
+  function startRotation() {
+    if (streamingMovies.length > 1) {
+      rotationInterval = setInterval(rotateFeaturedMovie, 12000); // 12 seconds
+    }
+  }
+
+  // Stop rotation timer
+  function stopRotation() {
+    if (rotationInterval) {
+      clearInterval(rotationInterval);
+    }
+  }
 
   onMount(async () => {
     // Load streaming movies for featured and recent releases
@@ -44,6 +69,11 @@
       if (streamingData.length > 0) {
         featuredMovie = streamingData[0];
         console.log('Home page - Featured movie:', featuredMovie);
+        
+        // Start rotation if we have multiple movies
+        if (streamingData.length > 1) {
+          startRotation();
+        }
       }
     } catch (error) {
       console.error('Error loading streaming data:', error);
@@ -67,6 +97,10 @@
 
     isLoading = false;
   });
+
+  onDestroy(() => {
+    stopRotation();
+  });
 </script>
 
 <svelte:head>
@@ -79,7 +113,11 @@
     {#if !isLoading}
       <!-- Featured Movie Section -->
       {#if featuredMovie}
-        <FeaturedMovie movie={featuredMovie} />
+        <FeaturedMovie 
+          movie={featuredMovie} 
+          currentIndex={currentFeaturedIndex}
+          totalMovies={streamingMovies.length}
+        />
       {/if}
 
       <!-- Recent Streaming Releases -->

@@ -9,6 +9,9 @@
     postersrc: string;
   };
   
+  export let currentIndex: number = 0;
+  export let totalMovies: number = 1;
+  
   let imdbUrl = '';
   let isLoadingImdbUrl = true;
   let imdbPosterUrl = '';
@@ -20,6 +23,47 @@
   let parallaxContainer: HTMLElement;
   let scrollY = 0;
 
+  let previousMovieTitle = '';
+
+  // Function to load IMDB data
+  async function loadImdbData() {
+    if (!movie || !movie.title) return;
+    
+    console.log('FeaturedMovie - Loading IMDB data for:', movie.title);
+    imageLoadAttempts = 0;
+    isLoadingImdbPoster = true;
+    isLoadingImdbUrl = true;
+    imdbPosterUrl = '';
+    imdbUrl = '';
+    
+    try {
+      // Get IMDB URL and poster URL in parallel
+      const [urlResult, posterResult] = await Promise.all([
+        getImdbUrl(movie.title),
+        getImdbPosterUrl(movie.title)
+      ]);
+      
+      imdbUrl = urlResult;
+      imdbPosterUrl = posterResult;
+      
+      console.log('FeaturedMovie - IMDB poster URL fetched:', imdbPosterUrl);
+    } catch (error) {
+      console.error('Error getting IMDb data:', error);
+      // Fallback to search URL
+      imdbUrl = `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`;
+    } finally {
+      isLoadingImdbUrl = false;
+      isLoadingImdbPoster = false;
+    }
+  }
+
+  // Watch for movie changes
+  $: if (movie && movie.title && movie.title !== previousMovieTitle) {
+    console.log('FeaturedMovie - Movie changed from', previousMovieTitle, 'to:', movie.title);
+    previousMovieTitle = movie.title;
+    loadImdbData();
+  }
+
   // Debug logging
   $: {
     console.log('FeaturedMovie - Movie data:', movie);
@@ -29,28 +73,11 @@
   }
 
   onMount(() => {
-    // Get IMDB data
-    (async () => {
-      try {
-        // Get IMDB URL and poster URL in parallel
-        const [urlResult, posterResult] = await Promise.all([
-          getImdbUrl(movie.title),
-          getImdbPosterUrl(movie.title)
-        ]);
-        
-        imdbUrl = urlResult;
-        imdbPosterUrl = posterResult;
-        
-        console.log('FeaturedMovie - IMDB poster URL fetched:', imdbPosterUrl);
-      } catch (error) {
-        console.error('Error getting IMDb data:', error);
-        // Fallback to search URL
-        imdbUrl = `https://www.imdb.com/find/?q=${encodeURIComponent(movie.title)}&s=tt&ttype=ft&ref_=fn_ft`;
-      } finally {
-        isLoadingImdbUrl = false;
-        isLoadingImdbPoster = false;
-      }
-    })();
+    // Load initial IMDB data
+    if (movie && movie.title) {
+      previousMovieTitle = movie.title;
+      loadImdbData();
+    }
 
     // Add scroll event listener for parallax effect
     const handleScroll = () => {
@@ -86,7 +113,7 @@
   }
 </script>
 
-<section class="relative h-screen min-h-[600px] max-h-[800px] overflow-hidden mb-8">
+<section class="relative h-screen min-h-[600px] max-h-[800px] overflow-hidden mb-8 transition-opacity duration-500">
   <a href={imdbUrl} target="_blank" rel="noopener noreferrer" class="block group h-full" class:pointer-events-none={isLoadingImdbUrl}>
     <!-- Parallax Background Container -->
     <div 
@@ -122,7 +149,7 @@
       <div class="w-full p-6 md:p-8 lg:p-12">
         <div class="max-w-4xl">
           <!-- Movie Title -->
-          <h1 class="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 group-hover:text-blue-300 transition-colors duration-300 leading-tight">
+          <h1 class="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 group-hover:text-blue-300 transition-all duration-500 leading-tight animate-in slide-in-from-bottom-2">
             {movie.title}
           </h1>
           
@@ -165,6 +192,21 @@
       </div>
     </div>
     
+    <!-- Movie Rotation Progress Indicator -->
+    <div class="absolute bottom-6 right-6 flex items-center gap-3">
+      <div class="flex gap-2">
+        {#each Array(totalMovies) as _, i}
+          <div 
+            class="w-2 h-2 rounded-full transition-all duration-300 {i === currentIndex ? 'bg-white scale-125' : 'bg-white/40'}"
+            title="Movie {i + 1} of {totalMovies}"
+          ></div>
+        {/each}
+      </div>
+      <span class="text-white/70 text-sm font-medium">
+        {currentIndex + 1} of {totalMovies}
+      </span>
+    </div>
+    
     <!-- Scroll Indicator -->
     <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 animate-bounce">
       <div class="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
@@ -197,6 +239,37 @@
     h1 {
       font-size: 2.5rem;
       line-height: 1.1;
+    }
+  }
+  
+  /* Animation classes */
+  .animate-in {
+    animation: fadeInUp 0.5s ease-out;
+  }
+  
+  .slide-in-from-bottom-2 {
+    animation: slideInFromBottom 0.5s ease-out;
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes slideInFromBottom {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 </style> 
