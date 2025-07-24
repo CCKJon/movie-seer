@@ -81,17 +81,19 @@
     </div>
     
     <!-- Movie Info -->
-    <div class="p-3 bg-gray-900/95 backdrop-blur-sm">
-      <h3 class="text-white font-semibold text-sm mb-1 line-clamp-2 group-hover:text-blue-300 transition-colors">
+    <div class="p-3 bg-gray-900/95 backdrop-blur-sm min-h-[80px] flex flex-col justify-between">
+      <h3 class="text-white font-semibold text-sm mb-1 line-clamp-2 group-hover:text-blue-300 transition-colors flex-grow">
         {movie.title}
       </h3>
       
       {#if episodeInfo}
-        <p class="text-gray-400 text-xs">{episodeInfo}</p>
+        <p class="text-gray-400 text-xs mt-auto">{episodeInfo}</p>
       {:else if movie.streaming_date}
-        <p class="text-gray-400 text-xs">{movie.streaming_date}</p>
+        <p class="text-gray-400 text-xs mt-auto">{movie.streaming_date}</p>
       {:else if movie.theater_date}
-        <p class="text-gray-400 text-xs">{movie.theater_date}</p>
+        <p class="text-gray-400 text-xs mt-auto">{movie.theater_date}</p>
+      {:else}
+        <div class="text-gray-400 text-xs mt-auto">&nbsp;</div>
       {/if}
     </div>
   </div>

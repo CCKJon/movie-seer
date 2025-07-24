@@ -266,12 +266,14 @@
                   </div>
                   
                   <!-- Movie Info -->
-                  <div class="p-2 bg-gray-900/95 backdrop-blur-sm">
-                    <h3 class="text-white font-semibold text-xs mb-1 line-clamp-2 group-hover:text-blue-300 transition-colors">
+                  <div class="p-2 bg-gray-900/95 backdrop-blur-sm min-h-[70px] flex flex-col justify-between">
+                    <h3 class="text-white font-semibold text-xs mb-1 line-clamp-2 group-hover:text-blue-300 transition-colors flex-grow">
                       {movie.title}
                     </h3>
                     {#if movie.bluray_date}
-                      <p class="text-gray-400 text-xs">{movie.bluray_date}</p>
+                      <p class="text-gray-400 text-xs mt-auto">{movie.bluray_date}</p>
+                    {:else}
+                      <div class="text-gray-400 text-xs mt-auto">&nbsp;</div>
                     {/if}
                   </div>
                 </div>
