@@ -63,7 +63,7 @@
       });
       const streamingData = await streamingResponse.json();
       console.log('Home page - Streaming data received:', streamingData);
-      streamingMovies = streamingData.slice(0, 10); // Get first 10 for recent releases
+      streamingMovies = streamingData.slice(0, 5); // Get first 5 for recent releases
       
       // Use first movie as featured
       if (streamingData.length > 0) {
