@@ -107,7 +107,7 @@
 	<title>Movie Seer - Discover New Movie Releases</title>
 	<meta
 		name="description"
-		content="Stay up to date with the latest movie releases - streaming, theatrical, and Blu-ray releases all in one place."
+		content="Stay up to date with the latest movie releases - streaming, theatrical, and Blu-ray releases all in one place!"
 	/>
 </svelte:head>
 
