@@ -166,7 +166,7 @@
 						<span class="text-white text-2xl">🎬</span>
 					</div>
 					<h2 class="text-xl font-semibold text-white mb-2">Loading Movies!...</h2>
-					<p class="text-gray-400">Please wait while we fetch the latest releases!</p>
+					<p class="text-gray-400">Please wait while we fetch the latest releases</p>
 				</div>
 			</div>
 		{/if}
