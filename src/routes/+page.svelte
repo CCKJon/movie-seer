@@ -152,7 +152,7 @@
 							<span class="text-white text-2xl">🎬</span>
 						</div>
 						<h2 class="text-xl font-semibold text-white mb-2">No Movies Found!</h2>
-						<p class="text-gray-400">Check back later for new releases!</p>
+						<p class="text-gray-400">Check back later for new releases</p>
 					</div>
 				</div>
 			{/if}
